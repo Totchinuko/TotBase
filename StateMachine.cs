@@ -9,11 +9,11 @@ namespace TotBase
     public class StateMachine : MonoBehaviour, IStateMachine
     {
         #region fields
-        public Action DoUpdate = DoNothing;
-        public Action DoFixedUpdate = DoNothing;
-        public Action DoLateUpdate = DoNothing;
-        public Action DoEnterState = DoNothing;
-        public Action DoExitState = DoNothing;
+        public Action DoUpdate;
+        public Action DoFixedUpdate;
+        public Action DoLateUpdate;
+        public Action DoEnterState;
+        public Action DoExitState;
 
         private Enum lastState;
         private Enum currentState;
@@ -61,25 +61,19 @@ namespace TotBase
         {
             ExitState();
 
-            DoUpdate = ConfigureDelegate<Action>(Update, DoNothing);
-            DoFixedUpdate = ConfigureDelegate<Action>(FixedUpdate, DoNothing);
-            DoLateUpdate = ConfigureDelegate<Action>(LateUpdate, DoNothing);
-            DoEnterState = ConfigureDelegate<Action>(EnterState, DoNothing);
-            DoEnterState = ConfigureDelegate<Action>(ExitState, DoNothing);
+            DoUpdate = ConfigureDelegate<Action>(Update);
+            DoFixedUpdate = ConfigureDelegate<Action>(FixedUpdate);
+            DoLateUpdate = ConfigureDelegate<Action>(LateUpdate);
+            DoEnterState = ConfigureDelegate<Action>(EnterState);
+            DoEnterState = ConfigureDelegate<Action>(ExitState);
 
             EnterState();
         }
 
-        protected T ConfigureDelegate<T>(T methodRoot, T defaultMethod) where T : class
+        protected T ConfigureDelegate<T>(T methodRoot) where T : class
         {
-            return Extension.ConfigureDelegate(this, methodRoot, defaultMethod, cache);
+            return Extension.ConfigureDelegate(this, methodRoot, cache);
         }
-
-        protected static void DoNothing() { }
-        protected static void DoNothing(Vector3 a) { }
-        protected static void DoNothing(Quaternion a) { }
-        protected static void DoNothing(float a) { }
-        protected static void DoNothing(bool a) { }
 
         protected virtual void Update() { DoUpdate?.Invoke(); }
         protected virtual void FixedUpdate() { DoFixedUpdate?.Invoke(); }

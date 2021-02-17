@@ -295,7 +295,7 @@ namespace TotBase
         /// <param name="methodRoot"></param>
         /// <param name="defaultMethod"></param>
         /// <returns></returns>
-        public static T ConfigureDelegate<T, R>(R machine, T methodRoot, T defaultMethod, Dictionary<Enum, Dictionary<int, Delegate>> cache) where T : class where R : class, IStateMachine
+        public static T ConfigureDelegate<T, R>(R machine, T methodRoot, Dictionary<Enum, Dictionary<int, Delegate>> cache) where T : class where R : class, IStateMachine
         {
             Delegate root = methodRoot as Delegate;
             // create cache if it don't exist already for the given state
@@ -313,9 +313,6 @@ namespace TotBase
                 // use passed default if no matching method exists and store the result in cache
                 if (method != null)
                     returnValue = Delegate.CreateDelegate(typeof(T), machine, method);
-                else
-                    returnValue = defaultMethod as Delegate;
-
                 lookup[hash] = returnValue;
             }
             return returnValue as T;

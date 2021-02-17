@@ -8,8 +8,8 @@ namespace TotBase
     public class StateMachineStandalone : IStateMachine
     {
         #region fields
-        public Action DoEnterState = DoNothing;
-        public Action DoExitState = DoNothing;
+        public Action DoEnterState;
+        public Action DoExitState;
 
         private Enum currentState;
         private Enum lastState;
@@ -44,22 +44,18 @@ namespace TotBase
         {
             ExitState();
 
-            DoEnterState = ConfigureDelegate<Action>(EnterState, DoNothing);
-            DoExitState = ConfigureDelegate<Action>(ExitState, DoNothing);
+            DoEnterState = ConfigureDelegate<Action>(EnterState);
+            DoExitState = ConfigureDelegate<Action>(ExitState);
 
             EnterState();
         }
 
-        protected T ConfigureDelegate<T>(T methodRoot, T defaultMethod) where T : class
+        protected T ConfigureDelegate<T>(T methodRoot) where T : class
         {
-            return Extension.ConfigureDelegate(this, methodRoot, defaultMethod, cache);
+            return Extension.ConfigureDelegate(this, methodRoot, cache);
         }
 
         protected virtual void EnterState() { DoEnterState?.Invoke(); }
         protected virtual void ExitState() { DoExitState?.Invoke(); }
-
-        protected static void DoNothing() { }
-        protected static void DoNothing(float a) { }
-        protected static void DoNothing(bool a) { }
     }
 }
