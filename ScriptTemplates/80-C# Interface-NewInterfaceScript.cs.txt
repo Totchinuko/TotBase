@@ -1,0 +1,10 @@
+using System;
+using UnityEngine;
+
+#ROOTNAMESPACEBEGIN#
+public interface #SCRIPTNAME#
+{
+	
+}
+
+#ROOTNAMESPACEEND#
