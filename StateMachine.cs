@@ -12,13 +12,13 @@ namespace TotBase
         public Action DoUpdate = DoNothing;
         public Action DoFixedUpdate = DoNothing;
         public Action DoLateUpdate = DoNothing;
-        public Action EnterState = DoNothing;
-        public Action ExitState = DoNothing;
+        public Action DoEnterState = DoNothing;
+        public Action DoExitState = DoNothing;
 
         private Enum lastState;
         private Enum currentState;
         private float timeStateBegin;
-        private Dictionary<Enum, Dictionary<string, Delegate>> cache = new Dictionary<Enum, Dictionary<string, Delegate>>();        
+        private Dictionary<Enum, Dictionary<int, Delegate>> cache = new Dictionary<Enum, Dictionary<int, Delegate>>();        
         #endregion
 
         #region Properties
@@ -59,18 +59,18 @@ namespace TotBase
         /// </summary>
         protected virtual void ConfigureCurrentState()
         {
-            OnExitState();
+            ExitState();
 
-            DoUpdate = ConfigureDelegate<Action>("Update", DoNothing);
-            DoFixedUpdate = ConfigureDelegate<Action>("FixedUpdate", DoNothing);
-            DoLateUpdate = ConfigureDelegate<Action>("LateUpdate", DoNothing);
-            EnterState = ConfigureDelegate<Action>("EnterState", DoNothing);
-            ExitState = ConfigureDelegate<Action>("ExitState", DoNothing);
+            DoUpdate = ConfigureDelegate<Action>(Update, DoNothing);
+            DoFixedUpdate = ConfigureDelegate<Action>(FixedUpdate, DoNothing);
+            DoLateUpdate = ConfigureDelegate<Action>(LateUpdate, DoNothing);
+            DoEnterState = ConfigureDelegate<Action>(EnterState, DoNothing);
+            DoEnterState = ConfigureDelegate<Action>(ExitState, DoNothing);
 
-            OnEnterState();
+            EnterState();
         }
 
-        protected T ConfigureDelegate<T>(string methodRoot, T defaultMethod) where T : class
+        protected T ConfigureDelegate<T>(T methodRoot, T defaultMethod) where T : class
         {
             return Extension.ConfigureDelegate(this, methodRoot, defaultMethod, cache);
         }
@@ -81,10 +81,10 @@ namespace TotBase
         protected static void DoNothing(float a) { }
         protected static void DoNothing(bool a) { }
 
-        protected virtual void Update() { if(DoUpdate != null) DoUpdate.Invoke(); }
-        protected virtual void FixedUpdate() { if (DoFixedUpdate != null) DoFixedUpdate.Invoke(); }
-        protected virtual void LateUpdate() { if (DoLateUpdate != null) DoLateUpdate.Invoke(); }
-        protected virtual void OnExitState() { if (ExitState != null) ExitState.Invoke(); }
-        protected virtual void OnEnterState() { if (EnterState != null) EnterState.Invoke(); }
+        protected virtual void Update() { DoUpdate?.Invoke(); }
+        protected virtual void FixedUpdate() { DoFixedUpdate?.Invoke(); }
+        protected virtual void LateUpdate() { DoLateUpdate?.Invoke(); }
+        protected virtual void ExitState() { DoExitState?.Invoke(); }
+        protected virtual void EnterState() { DoEnterState?.Invoke(); }
     }
 }

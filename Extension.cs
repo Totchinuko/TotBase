@@ -295,19 +295,20 @@ namespace TotBase
         /// <param name="methodRoot"></param>
         /// <param name="defaultMethod"></param>
         /// <returns></returns>
-        public static T ConfigureDelegate<T, R>(R machine, string methodRoot, T defaultMethod, Dictionary<Enum, Dictionary<string, Delegate>> cache) where T : class where R : class, IStateMachine
+        public static T ConfigureDelegate<T, R>(R machine, T methodRoot, T defaultMethod, Dictionary<Enum, Dictionary<int, Delegate>> cache) where T : class where R : class, IStateMachine
         {
+            Delegate root = methodRoot as Delegate;
             // create cache if it don't exist already for the given state
-            Dictionary<string, Delegate> lookup;
+            Dictionary<int, Delegate> lookup;
             if (!cache.TryGetValue(machine.CurrentState, out lookup))
-                cache[machine.CurrentState] = lookup = new Dictionary<string, Delegate>();
+                cache[machine.CurrentState] = lookup = new Dictionary<int, Delegate>();
 
             Delegate returnValue;
-            if (!lookup.TryGetValue(methodRoot, out returnValue))
+            int hash = root.Method.Name.GetHashCode();
+            if (!lookup.TryGetValue(hash, out returnValue))
             {
                 // find using reflexion a method in the current type that match a naming convention (State_RootMethode())
-                MethodInfo method = machine.GetType().GetMethod(machine.CurrentState.ToString() + "_" + methodRoot, BindingFlags.Instance
-                    | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.InvokeMethod);
+                MethodInfo method = machine.GetType().GetMethod($"{machine.CurrentState.ToString()}_{root.Method.Name}", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.InvokeMethod);
 
                 // use passed default if no matching method exists and store the result in cache
                 if (method != null)
@@ -315,7 +316,7 @@ namespace TotBase
                 else
                     returnValue = defaultMethod as Delegate;
 
-                lookup[methodRoot] = returnValue;
+                lookup[hash] = returnValue;
             }
             return returnValue as T;
         }
