@@ -65,7 +65,7 @@ namespace TotBase
             DoFixedUpdate = ConfigureDelegate<Action>(FixedUpdate);
             DoLateUpdate = ConfigureDelegate<Action>(LateUpdate);
             DoEnterState = ConfigureDelegate<Action>(EnterState);
-            DoEnterState = ConfigureDelegate<Action>(ExitState);
+            DoExitState = ConfigureDelegate<Action>(ExitState);
 
             EnterState();
         }
