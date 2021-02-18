@@ -70,14 +70,16 @@ namespace TotBase
 
         public void AddKeyInputs(InputDefinition[] definitions)
         {
-            foreach (InputDefinition def in definitions)
-                keyMapping[def.name] = def;
+            if(definitions != null)
+                foreach (InputDefinition def in definitions)
+                    keyMapping[def.name] = def;
         }
 
         public void AddStickInputs(JoystickDefinition[] definitions)
         {
-            foreach (JoystickDefinition def in definitions)
-                stickMapping[def.name] = def;
+            if (definitions != null)
+                foreach (JoystickDefinition def in definitions)
+                    stickMapping[def.name] = def;
         }
 
         private static void GetInputs(out InputDefinition[] inputs, out JoystickDefinition[] sticks)
