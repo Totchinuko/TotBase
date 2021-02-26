@@ -80,7 +80,7 @@ public class ClassTypeReferenceDrawer : PropertyDrawer
                 Type type = attr.Type;
                 var types = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(s => s.GetTypes())
-                    .Where(p => type.IsAssignableFrom(p));
+                    .Where(p => type.IsAssignableFrom(p) && ((p.IsAbstract && attr.allowAbstract) || !p.IsAbstract) && p.IsClass);
                 entries.Add("None");
                 tEntries.Add(null);
                 foreach (Type t in types)

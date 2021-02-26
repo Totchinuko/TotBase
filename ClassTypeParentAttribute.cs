@@ -8,6 +8,7 @@ namespace TotBase
     public class ClassTypeParentAttribute : Attribute
     {
         private Type type;
+        public bool allowAbstract = true;
 
         public Type Type => type;
 
