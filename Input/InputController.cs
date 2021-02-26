@@ -163,6 +163,18 @@ namespace TotBase
                 return 0f;
         }
 
+        public static bool GetAxisDown(string axisName) => GetAxisDown(GetHash(axisName));
+        public static bool GetAxisDown(int axis)
+        {
+            AxisDefinition def = Controller.axisMapping[axis];
+            if (Controller.UseKeyboardMouse && Controller.keyMapping.ContainsKey(def.keyNegativeHash) && Controller.keyMapping.ContainsKey(def.keyPositiveHash))
+                return GetKey(def.keyNegative) || GetKey(def.keyPositive);
+            else if (Controller.stickMapping.ContainsKey(def.joystickAxisHash))
+                return !Mathf.Approximately(GetJoystickAxis(def.joystickAxisHash), 0f);
+            else
+                return false;
+        }
+
         public static void SetJoystickAxis(string axisName, int index) => SetJoystickAxis(GetHash(axisName), index);
         public static void SetJoystickAxis(int axis, int index)
         {
