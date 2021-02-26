@@ -10,6 +10,7 @@ using System.Linq;
 public class ClassTypeReferenceDrawer : PropertyDrawer
 {
     private List<string> entries = new List<string>();
+    private List<Type> tEntries = new List<Type>();
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
@@ -36,11 +37,7 @@ public class ClassTypeReferenceDrawer : PropertyDrawer
 
             if (index != newIndex)
             {
-
-                Type t = AppDomain.CurrentDomain.GetAssemblies()
-                        .SelectMany(s => s.GetTypes())
-                        .Where(p => p.Name == entries[newIndex])
-                        .First();
+                Type t = tEntries[newIndex];
                 property.FindPropertyRelative("_classRef").stringValue = ClassTypeReference.GetClassRef(t);
             }
         }
@@ -60,12 +57,12 @@ public class ClassTypeReferenceDrawer : PropertyDrawer
 
     private int GetIndexOfType(SerializedProperty p)
     {
-        string name = Type.GetType(p.FindPropertyRelative("_classRef").stringValue)?.Name;
+        string name = Type.GetType(p.FindPropertyRelative("_classRef").stringValue)?.ToString();
         for (int i = 0; i < entries.Count; i++)
             if (entries[i] == name)
                 return i;
 
-        return -1;
+        return 0;
     }
 
     private void PopulateEntries(ClassTypeParentAttribute attr)
@@ -84,9 +81,17 @@ public class ClassTypeReferenceDrawer : PropertyDrawer
                 var types = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(s => s.GetTypes())
                     .Where(p => type.IsAssignableFrom(p));
+                entries.Add("None");
+                tEntries.Add(null);
                 foreach (Type t in types)
+                {
                     if (t.IsClass)
+                    {
                         entries.Add(t.ToString());
+                        tEntries.Add(t);
+                    }                        
+                }
+                    
             }
         }
     }
