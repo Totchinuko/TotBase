@@ -158,7 +158,7 @@ namespace TotBase
             if (Controller.UseKeyboardMouse && Controller.keyMapping.ContainsKey(def.keyNegativeHash) && Controller.keyMapping.ContainsKey(def.keyPositiveHash))
                 return (GetKey(def.keyNegative) ? -1f : 0f) + (GetKey(def.keyPositive) ? 1f : 0f);
             else if (Controller.stickMapping.ContainsKey(def.joystickAxisHash))
-                return GetJoystickAxis(def.joystickAxis);
+                return GetJoystickAxis(def.joystickAxisHash);
             else
                 return 0f;
         }
