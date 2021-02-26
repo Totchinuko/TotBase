@@ -50,6 +50,14 @@ namespace TotBase
 
         private void Awake()
         {
+            if(controller != null && controller != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            controller = this;
+            DontDestroyOnLoad(gameObject);
+
             UseKeyboardMouse = useKeyboardDefault;
             SetupDefaultInputs();
         }
