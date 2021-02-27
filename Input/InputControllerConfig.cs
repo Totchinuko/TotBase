@@ -10,7 +10,6 @@ namespace TotBase
     {
         public InputDefinition[] keys;
         public JoystickDefinition[] sticks;
-        public AxisDefinition[] axis;
     }
 }
 

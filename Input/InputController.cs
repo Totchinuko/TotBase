@@ -22,6 +22,8 @@ namespace TotBase
 
         [SerializeField]
         private InputControllerConfig defaultInputs;
+        [SerializeField]
+        private InputControllerAxisConfig axisConfig;
 
         private InputControllerConfig userConfig;
 
@@ -54,7 +56,7 @@ namespace TotBase
                 stickMapping[GetHash(def.name)] = def;
 
             axisMapping = new Dictionary<int, AxisDefinition>();
-            foreach (AxisDefinition def in defaultInputs.axis)
+            foreach (AxisDefinition def in axisConfig.axis)
             {
                 axisMapping[GetHash(def.name)] = def;
                 def.RefreshHash();
@@ -254,10 +256,7 @@ namespace TotBase
             if (Extension.TryGetFileContent(out string config, "Config", "Inputs.json"))
                 userConfig = JsonUtility.FromJson<InputControllerConfig>(config);
             else
-            {
                 userConfig = Instantiate(defaultInputs);
-                userConfig.axis = null;
-            }                
         }
 
         private void SaveUserConfig()
