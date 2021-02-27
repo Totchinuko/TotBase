@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace TotBase
 {
@@ -20,33 +21,15 @@ namespace TotBase
         #endregion
 
         [SerializeField]
-        private InputDefinition[] defaultKeys;
-        [SerializeField]
-        private JoystickDefinition[] defaultSticks;
-        [SerializeField]
-        private AxisDefinition[] axisDefinitions;
-        [SerializeField]
-        private bool useKeyboardDefault;
+        private InputControllerConfig defaultInputs;
+
+        private InputControllerConfig userConfig;
 
         private Dictionary<int, InputDefinition> keyMapping;
         private Dictionary<int, JoystickDefinition> stickMapping;
         private Dictionary<int, AxisDefinition> axisMapping;
 
         public event EventHandler ConfigChanged;
-
-        private bool useKeyboardMouse;
-        public bool UseKeyboardMouse
-        {
-            get
-            {
-                return useKeyboardMouse;
-            }
-            set
-            {
-                useKeyboardMouse = value;
-                OnConfigChanged();
-            }
-        }
 
         private void Awake()
         {
@@ -58,21 +41,20 @@ namespace TotBase
             controller = this;
             DontDestroyOnLoad(gameObject);
 
-            UseKeyboardMouse = useKeyboardDefault;
             SetupDefaultInputs();
         }
 
         public void SetupDefaultInputs()
         {
             keyMapping = new Dictionary<int, InputDefinition>();
-            foreach (InputDefinition def in defaultKeys)            
+            foreach (InputDefinition def in defaultInputs.keys)            
                 keyMapping[GetHash(def.name)] = def;
             stickMapping = new Dictionary<int, JoystickDefinition>();
-            foreach (JoystickDefinition def in defaultSticks)
+            foreach (JoystickDefinition def in defaultInputs.sticks)
                 stickMapping[GetHash(def.name)] = def;
 
             axisMapping = new Dictionary<int, AxisDefinition>();
-            foreach (AxisDefinition def in axisDefinitions)
+            foreach (AxisDefinition def in defaultInputs.axis)
             {
                 axisMapping[GetHash(def.name)] = def;
                 def.RefreshHash();
@@ -155,22 +137,25 @@ namespace TotBase
         public static float GetAxis(int axis)
         {
             AxisDefinition def = Controller.axisMapping[axis];
-            if (Controller.UseKeyboardMouse && Controller.keyMapping.ContainsKey(def.keyNegativeHash) && Controller.keyMapping.ContainsKey(def.keyPositiveHash))
-                return (GetKey(def.keyNegative) ? -1f : 0f) + (GetKey(def.keyPositive) ? 1f : 0f);
-            else if (Controller.stickMapping.ContainsKey(def.joystickAxisHash))
-                return GetJoystickAxis(def.joystickAxisHash);
-            else
-                return 0f;
+            float value = 0f;
+            if (Controller.keyMapping.TryGetValue(def.keyNegativeHash, out InputDefinition neg) && Controller.keyMapping.TryGetValue(def.keyPositiveHash, out InputDefinition pos))
+                value = (neg.GetKey() ? -1f : 0f) + (pos.GetKey() ? 1f : 0f);
+            if (Controller.stickMapping.TryGetValue(def.joystickAxisHash, out JoystickDefinition joy))
+            {
+                float stick = joy.GetAxis();
+                value = Mathf.Abs(stick) > Mathf.Abs(value) ? stick : value;
+            }
+            return value;
         }
 
         public static bool GetAxisDown(string axisName) => GetAxisDown(GetHash(axisName));
         public static bool GetAxisDown(int axis)
         {
             AxisDefinition def = Controller.axisMapping[axis];
-            if (Controller.UseKeyboardMouse && Controller.keyMapping.ContainsKey(def.keyNegativeHash) && Controller.keyMapping.ContainsKey(def.keyPositiveHash))
-                return GetKey(def.keyNegative) || GetKey(def.keyPositive);
-            else if (Controller.stickMapping.ContainsKey(def.joystickAxisHash))
-                return !Mathf.Approximately(GetJoystickAxis(def.joystickAxisHash), 0f);
+            if (Controller.keyMapping.TryGetValue(def.keyNegativeHash, out InputDefinition neg) && Controller.keyMapping.TryGetValue(def.keyPositiveHash, out InputDefinition pos) && (neg.GetKey() || pos.GetKey()))
+                return true;
+            else if (Controller.stickMapping.TryGetValue(def.joystickAxisHash, out JoystickDefinition joy) && !Mathf.Approximately(joy.GetAxis(), 0f))
+                return true;
             else
                 return false;
         }
@@ -248,6 +233,12 @@ namespace TotBase
             return 0;
         }
 
+        public static void SaveInputs()
+        {
+            Controller.UpdateConfig();
+            Controller.SaveUserConfig();
+        }
+
         protected virtual void OnConfigChanged()
         {
             ConfigChanged?.Invoke(this, EventArgs.Empty);
@@ -257,64 +248,28 @@ namespace TotBase
         {
             return Animator.StringToHash(name);
         }
-    }
 
-    [Serializable]
-    public class InputDefinition
-    {
-        public string name;        
-        public KeyCode primaryKey;
-        public KeyCode alternatKey;
-
-        public bool GetKeyDown()
+        private void LoadUserConfig()
         {
-            return Input.GetKeyDown(primaryKey) || Input.GetKeyDown(alternatKey);
+            if (Extension.TryGetFileContent(out string config, "Config", "Inputs.json"))
+                userConfig = JsonUtility.FromJson<InputControllerConfig>(config);
+            else
+            {
+                userConfig = Instantiate(defaultInputs);
+                userConfig.axis = null;
+            }                
         }
 
-        public bool GetKey()
+        private void SaveUserConfig()
         {
-            return Input.GetKey(primaryKey) || Input.GetKey(alternatKey);
+            string json = JsonUtility.ToJson(userConfig);
+            Extension.TrySetFileContent(json, "Config", "Inputs.json");
         }
 
-        public bool GetKeyUp()
+        private void UpdateConfig()
         {
-            return Input.GetKeyUp(primaryKey) || Input.GetKeyUp(alternatKey);
-        }
-    }
-    
-    [Serializable]
-    public class JoystickDefinition
-    {
-        public string name;
-        [Range(1, 28)]
-        public int index;
-
-        public float GetAxis()
-        {
-            return Input.GetAxisRaw($"Joy{index.ToString("00")}");
-        }
-    }
-
-    [Serializable]
-    public class AxisDefinition
-    {
-        public string name;
-        public string keyNegative;
-        public string keyPositive;
-        public string joystickAxis;
-
-        [HideInInspector]
-        public int keyNegativeHash;
-        [HideInInspector]
-        public int keyPositiveHash;
-        [HideInInspector]
-        public int joystickAxisHash;
-
-        public void RefreshHash()
-        {
-            keyNegativeHash = InputController.GetHash(keyNegative);
-            keyPositiveHash = InputController.GetHash(keyPositive);
-            joystickAxisHash = InputController.GetHash(joystickAxis);
+            userConfig.keys = keyMapping.Values.ToArray();
+            userConfig.sticks = stickMapping.Values.ToArray();
         }
     }
 }
