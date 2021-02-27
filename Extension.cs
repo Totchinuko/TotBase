@@ -263,6 +263,42 @@ namespace TotBase
             return path;
         }
 
+        public static bool TryGetFile(out string absolutePath, params string[] relativePath) => TryGetFile(out absolutePath, Path.Combine(relativePath));
+        public static bool TryGetFile(out string absolutePath, string relativePath)
+        {
+            absolutePath = Path.Combine(GetDocumentPathOrCreate(), relativePath);
+            if (File.Exists(absolutePath))
+                return true;
+            return false;
+        }
+
+        public static bool TryGetFileContent(out string content, params string[] relativePath) => TryGetFileContent(out content, Path.Combine(relativePath));
+        public static bool TryGetFileContent(out string content, string relativePath)
+        {
+            content = "";
+            if(TryGetFile(out string path, relativePath))
+            {
+                content = File.ReadAllText(path);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool TrySetFileContent(string content, params string[] relativePath) => TrySetFileContent(content, Path.Combine(relativePath));
+        public static bool TrySetFileContent(string content, string relativePath)
+        {
+            try
+            {
+                string path = Path.Combine(GetDocumentPathOrCreate(), relativePath);
+                File.WriteAllText(path, content);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Use reflexion to find matching method given the current state and main method name. Build a cache for futur lookup. Use default if none found.
         /// </summary>
