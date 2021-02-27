@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using System.IO;
 
 namespace TotBase
 {
@@ -252,6 +253,14 @@ namespace TotBase
             }
 
             return false;
+        }
+
+        public static string GetDocumentPathOrCreate()
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            path = Path.Combine(path, Application.companyName, Application.productName);
+            Directory.CreateDirectory(path);
+            return path;
         }
 
         /// <summary>
