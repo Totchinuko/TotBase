@@ -159,12 +159,20 @@ public class SpriteRenamer : EditorWindow
         if (targetFolder.StartsWith(Application.dataPath))
             targetFolder = "Assets" + targetFolder.Substring(Application.dataPath.Length);
 
-        string transformPath = AnimationUtility.CalculateTransformPath(rend.transform, anim.transform);
-        int framecount = serie.end - serie.start;
         Sprite[] sprites = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(tex)).OfType<Sprite>().ToArray();
+        Dictionary<string, Sprite> lookupTable = new Dictionary<string, Sprite>();
+        foreach (Sprite s in sprites)
+            lookupTable[s.name] = s;
+        TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(tex)) as TextureImporter;
+        SpriteMetaData[] spritesheed = importer.spritesheet;
+
+        string transformPath = AnimationUtility.CalculateTransformPath(rend.transform, anim.transform);
+        int framecount = serie.end - serie.start + 1;
+        
         AnimationClip clip = new AnimationClip();
         clip.name = $"{tex.name}_{serie.name}";
         clip.frameRate = framecount;
+        clip.wrapMode = WrapMode.Loop;
 
         // now some voodoo stuff to set sprite ref on those keyframes
         EditorCurveBinding binding = EditorCurveBinding.PPtrCurve(transformPath, typeof(SpriteRenderer), "m_Sprite");
@@ -173,7 +181,7 @@ public class SpriteRenamer : EditorWindow
             objectRefCurve[i] = new ObjectReferenceKeyframe()
             {
                     time = i/(float)framecount,
-                    value = sprites[serie.start + i]
+                    value = lookupTable[spritesheed[serie.start + i].name]
             };
 
         AnimationUtility.SetObjectReferenceCurve(clip, binding, objectRefCurve);
