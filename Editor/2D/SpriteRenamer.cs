@@ -167,7 +167,7 @@ public class SpriteRenamer : EditorWindow
         SpriteMetaData[] spritesheed = importer.spritesheet;
 
         string transformPath = AnimationUtility.CalculateTransformPath(rend.transform, anim.transform);
-        int framecount = serie.end - serie.start;
+        int framecount = serie.end - serie.start + 1;
         
         AnimationClip clip = new AnimationClip();
         clip.name = $"{tex.name}_{serie.name}";
