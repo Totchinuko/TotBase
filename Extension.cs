@@ -45,6 +45,11 @@ namespace TotBase
                 return to1;
         }
 
+        public static bool VEqual(this Vector2Int a, Vector2Int b)
+        {
+            return a.x == b.x && a.y == b.y;
+        }
+
         public static Color ApplyHSBEffect(this Color value, Vector4 hsb)
         {
             float hue = 360 * hsb.x;
