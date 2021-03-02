@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Linq;
 using System.Text.RegularExpressions;
+using TotBaseEditor;
 
 public class SpriteRenamer : EditorWindow
 {
