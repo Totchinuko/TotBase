@@ -10,6 +10,7 @@ using TotBaseEditor;
 public class SpriteRenamer : EditorWindow
 {
     private Animator anim;
+    private Animation animation;
     private SpriteRenderer rend;
 
     [SerializeField]
@@ -72,12 +73,14 @@ public class SpriteRenamer : EditorWindow
         EditorGUILayout.EndHorizontal();
         GUILayout.Space(50);
         EditorGUILayout.LabelField("Animation generator", EditorStyles.boldLabel);
-        EditorGUILayout.PrefixLabel("Animator");
+        EditorGUILayout.PrefixLabel("Animator...");
         anim = (Animator)EditorGUILayout.ObjectField(anim, typeof(Animator), true);
+        EditorGUILayout.PrefixLabel("... ou Animation");
+        animation = (Animation)EditorGUILayout.ObjectField(animation, typeof(Animation), true);
         EditorGUILayout.PrefixLabel("Sprite Renderer");
         rend = (SpriteRenderer)EditorGUILayout.ObjectField(rend, typeof(SpriteRenderer), true);
         GUILayout.Space(50);
-        if (rend != null && anim != null && GUILayout.Button("Create Animations", GUILayout.Width(150)))
+        if (rend != null && (anim != null || animation != null) && GUILayout.Button("Create Animations", GUILayout.Width(150)))
         {
             CreateAnimations();
         }
@@ -146,7 +149,7 @@ public class SpriteRenamer : EditorWindow
     {
         string path = GetFolder();
         foreach(SpriteSerie s in series)
-            CreateAnimation(s, texture, anim, rend, path);
+            CreateAnimation(s, texture, anim != null ? anim.transform : animation.transform, rend.transform, path);
         AssetDatabase.SaveAssets();
     }
 
@@ -155,7 +158,7 @@ public class SpriteRenamer : EditorWindow
         return EditorUtility.OpenFolderPanel("Animation destination folder", "Assets/", "");
     }
 
-    private void CreateAnimation(SpriteSerie serie, Texture2D tex, Animator anim, SpriteRenderer rend, string targetFolder)
+    private void CreateAnimation(SpriteSerie serie, Texture2D tex, Transform anim, Transform rend, string targetFolder)
     {
         if (targetFolder.StartsWith(Application.dataPath))
             targetFolder = "Assets" + targetFolder.Substring(Application.dataPath.Length);
@@ -167,7 +170,7 @@ public class SpriteRenamer : EditorWindow
         TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(tex)) as TextureImporter;
         SpriteMetaData[] spritesheed = importer.spritesheet;
 
-        string transformPath = AnimationUtility.CalculateTransformPath(rend.transform, anim.transform);
+        string transformPath = AnimationUtility.CalculateTransformPath(rend, anim);
         int framecount = serie.end - serie.start + 1;
         
         AnimationClip clip = new AnimationClip();
