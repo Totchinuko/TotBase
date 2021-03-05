@@ -13,12 +13,15 @@ namespace TotBase.SM
         public S LastState => lastState;
         public S CurrentState => currentState;
 
+        public float LastEnterState { get; private set; }
+
         public void SetState(S state)
         {
             currentState?.ExitState((M)this);
             lastState = currentState;
             currentState = state;
             currentState?.EnterState((M)this);
+            LastEnterState = Time.time;
         }
 
         private void Update()
