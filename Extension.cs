@@ -20,6 +20,8 @@ namespace TotBase
             return to1 + (value - from1) * (to2 - to1) / (from2 - from1);
         }
 
+        public static float Remap(this float value, float from1, float from2, DoubleFloat to) => Remap(value, from1, from2, to.min, to.max);
+
         public static float Remap(this int value, float from1, float from2, float to1, float to2)
         {
             return to1 + (value - from1) * (to2 - to1) / (from2 - from1);
@@ -222,6 +224,27 @@ namespace TotBase
                 
             return randDirection;
 
+        }
+
+        public static Vector3 ToPolarCoordinate(this Vector3 cartesian)
+        {
+            float mag = cartesian.magnitude;
+            return new Vector3()
+            {
+                x = mag,
+                y = Mathf.Acos(cartesian.y / mag),
+                z = Mathf.Atan(cartesian.x / cartesian.z)
+            };
+        }
+
+        public static Vector3 ToCartesianCoordinate(this Vector3 polar)
+        {
+            return new Vector3()
+            {
+                z = polar.x * Mathf.Sin(polar.y) * Mathf.Cos(polar.z),
+                x = polar.x * Mathf.Sin(polar.y) * Mathf.Sin(polar.z),
+                y = polar.x * Mathf.Cos(polar.y)
+            };
         }
 
         public static IEnumerable<T> GetObjectWithInterface<T>() where T : class
