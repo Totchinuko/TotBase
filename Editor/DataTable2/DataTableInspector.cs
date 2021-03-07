@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using TotBase;
-using System;
+using TotBase.DataTable;
 
-namespace TotBaseEditor
+namespace TotBaseEditor.DataTable
 {
-    [Obsolete]
-    public abstract class DataTableInspector<T> : Editor where T : struct
+    public abstract class DataTableInspector<T> : Editor where T : ScriptableObject
     {
         private bool _showRaw;
 

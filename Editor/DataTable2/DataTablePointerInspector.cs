@@ -2,13 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using TotBase;
-using System;
+using TotBase.DataTable;
 
-namespace TotBaseEditor
+namespace TotBaseEditor.DataTable
 {
     [CustomPropertyDrawer(typeof(DataTablePointer))]
-    [Obsolete]
     public class DataTablePointerInspector : PropertyDrawer
     {
 

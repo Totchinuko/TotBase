@@ -1,19 +1,15 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-
-namespace TotBase
+namespace TotBase.DataTable
 {
     [Serializable]
-    [Obsolete]
     public class DataTablePointer
     {
         public ScriptableObject _datatable;
         public string _key;
 
-        public bool TryGetEntry<T>(out T entry) where T : struct
+        public bool TryGetEntry<T>(out T entry) where T : ScriptableObject
         {
             entry = default;
             if (_datatable == null) return false;
@@ -22,7 +18,7 @@ namespace TotBase
             return dt.TryGetEntry(_key, out entry);
         }
 
-        public bool HasEntry<T>() where T : struct
+        public bool HasEntry<T>() where T : ScriptableObject
         {
             return ((IDataTable<T>)_datatable).ContainsKey(_key);
         }
@@ -32,5 +28,4 @@ namespace TotBase
             return $"{_datatable} [{_key}]";
         }
     }
-
 }

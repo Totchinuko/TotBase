@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.Collections.Generic;
 
-namespace TotBase
+namespace TotBase.DataTable
 {
-    [Serializable]
-    [Obsolete]
-    public abstract class DataTable<T> : ScriptableObject, IDataTable<T>, IAnonymousDataTable, ISerializationCallbackReceiver where T : struct
+    public abstract class DataTable<T> : ScriptableObject where T : ScriptableObject
     {
         [SerializeField]
         private List<string> keys = new List<string>();
@@ -42,9 +39,6 @@ namespace TotBase
         {
             return typeof(T);
         }
-
-        public abstract T CreateStruct();
-
 
         public void OnAfterDeserialize()
         {

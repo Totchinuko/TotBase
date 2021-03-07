@@ -5,9 +5,9 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using TotBase;
+using TotBase.DataTable;
 
-namespace TotBaseEditor
+namespace TotBaseEditor.DataTable
 {
     public struct DebugTest
     {
@@ -16,8 +16,7 @@ namespace TotBaseEditor
         public float test3;
     }
 
-    [Obsolete]
-    public abstract class DataTableEditorWindow<T> : EditorWindow where T : struct
+    public abstract class DataTableEditorWindow<T> : EditorWindow where T : ScriptableObject
     {
         private IDataTable<T> datatable;
         private Vector2 editorScroll;
@@ -210,7 +209,9 @@ namespace TotBaseEditor
             {
                 GUILayout.Space(10f);
                 editorScroll = EditorGUILayout.BeginScrollView(editorScroll);
-                DrawRowEditor();
+                // DrawRowEditor();
+                Editor editor = Editor.CreateEditor(selectedRow.row);
+                editor.OnInspectorGUI();
                 EditorGUILayout.EndScrollView();
             }
             EditorGUILayout.EndVertical();
@@ -247,6 +248,16 @@ namespace TotBaseEditor
             }
 
             idbox = EditorGUILayout.TextField(idbox, GUILayout.Width(200f));
+            EditorGUI.BeginChangeCheck();
+            T so = EditorGUILayout.ObjectField(selectedRow.row, typeof(T), false, GUILayout.Width(150f)) as T;
+            if(EditorGUI.EndChangeCheck())
+            {
+                datatable.SetEntry(selectedRow.key, so);
+                EditorUtility.SetDirty(datatable as ScriptableObject);
+                selectedRow.row = so;
+                OnSearchUpdated();
+                Repaint();
+            }
 
             if (selectedRow != null && GUILayout.Button("Rename", GUILayout.Width(100f)))
             {
