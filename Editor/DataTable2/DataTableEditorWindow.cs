@@ -44,27 +44,15 @@ namespace TotBaseEditor.DataTable
             datatable = table;
 
             headers.Clear();
-            FieldInfo[] fields = table.GetStructType().GetFields();
-            foreach (FieldInfo info in fields)
-            {
-                DataTableHeader h = new DataTableHeader(info.Name);
-                h.Clicked += OnHeaderClicked;
-                h.Repainted += OnRepaint;
-                h.Resized += OnResized;
-                headers.Add(h);
-            }
-            keyHeader = new DataTableHeader("Key", 80f);
-            keyHeader.Repainted += OnRepaint;
-            keyHeader.Resized += OnResized;
-            keyHeader.Clicked += OnHeaderClicked;
+            headers.Add(CreateHeader("Type"));
+            headers.Add(CreateHeader("Name"));
+            headers.Add(CreateHeader("Path"));
+            keyHeader = CreateHeader("Key", 80f);
 
             rows.Clear();
             table.ForEachEntries((string key, T value) =>
             {
-                DataTableRow r = new DataTableRow(headers.Count, value, key);
-                r.Clicked += OnRowClicked;
-                rows.Add(r);
-
+                rows.Add(CreateRow(key, value));
             });
             OnSearchUpdated();
             RefreshRowSizes();
@@ -78,7 +66,41 @@ namespace TotBaseEditor.DataTable
             selectedRow = (DataTableRow)sender;
             selectedRow.SetSelected(true);
             idbox = selectedRow.key;
+            OnSearchUpdated();
             Repaint();
+        }
+
+        private DataTableHeader CreateHeader(string name, float size = 200f){
+            DataTableHeader h = new DataTableHeader(name, size);
+            h.Clicked += OnHeaderClicked;
+            h.Repainted += OnRepaint;
+            h.Resized += OnResized;
+            return h;
+        }
+
+        private DataTableRow CreateRow(string key, ScriptableObject obj)
+        {
+            DataTableRow r = new DataTableRow(headers.Count, obj, key);
+            r.AppendColumn(ColumnType);
+            r.AppendColumn(ColumnName);
+            r.AppendColumn(ColumnPath);
+            r.Clicked += OnRowClicked;
+            return r;
+        }
+
+        private string ColumnType(ScriptableObject obj)
+        {
+            return obj.GetType().Name;
+        }
+
+        private string ColumnName(ScriptableObject obj)
+        {
+            return obj.name;
+        }
+
+        private string ColumnPath(ScriptableObject obj)
+        {
+            return AssetDatabase.GetAssetPath(obj);
         }
 
         private void OnResized(object sender, EventArgs e)
@@ -132,7 +154,7 @@ namespace TotBaseEditor.DataTable
 
             filtered = new List<DataTableRow>();
             foreach (DataTableRow row in rows)
-                if (row.GetFields().Any(x => x.Contains(search)))
+                if (row.GetSearchString().Contains(search))
                     filtered.Add(row);
             Repaint();
         }
@@ -161,7 +183,7 @@ namespace TotBaseEditor.DataTable
 
             foreach (DataTableRow row in rows)
                 row.SetHeadersSizes(ref sizes, total, keyHeader.size);
-        }
+        } 
 
         void OnGUI()
         {
@@ -204,8 +226,21 @@ namespace TotBaseEditor.DataTable
             EditorGUILayout.BeginHorizontal();
             DrawRowHeader();
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(10f);
+            EditorGUI.BeginChangeCheck();
+            T so = null;
+            if(selectedRow != null)
+                so = EditorGUILayout.ObjectField(selectedRow.row, typeof(T), false, GUILayout.Width(200f)) as T;
+            if(EditorGUI.EndChangeCheck())
+            {
+                datatable.SetEntry(selectedRow.key, so);
+                EditorUtility.SetDirty(datatable as ScriptableObject);
+                selectedRow.row = so;
+                OnSearchUpdated();
+                Repaint();
+            }
 
-            if (rows.Count > 0 && selectedRow != null)
+            if (rows.Count > 0 && selectedRow != null && selectedRow.row != null)
             {
                 GUILayout.Space(10f);
                 editorScroll = EditorGUILayout.BeginScrollView(editorScroll);
@@ -217,29 +252,6 @@ namespace TotBaseEditor.DataTable
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawRowEditor()
-        {
-            if (selectedRow != null)
-            {
-                object field;
-                FieldInfo[] infos = datatable.GetStructType().GetFields();
-                foreach (FieldInfo info in infos)
-                {
-                    EditorGUILayout.BeginHorizontal(GUILayout.Height(20f));
-                    EditorGUILayout.LabelField(info.Name, GUILayout.MinWidth(200f));
-                    GUILayout.Space(5f);
-                    field = info.GetValue(selectedRow.row);
-                    if (DrawField(info.FieldType, ref field))
-                    {
-                        info.SetValue(selectedRow.row, field);
-                        datatable.SetEntry(selectedRow.key, (T)selectedRow.row);
-                        EditorUtility.SetDirty((ScriptableObject)datatable);
-                    }
-                    EditorGUILayout.EndHorizontal();
-                }
-            }
-        }
-
         private void DrawRowHeader()
         {
             if (GUILayout.Button("Add", GUILayout.Width(50f)))
@@ -248,17 +260,6 @@ namespace TotBaseEditor.DataTable
             }
 
             idbox = EditorGUILayout.TextField(idbox, GUILayout.Width(200f));
-            EditorGUI.BeginChangeCheck();
-            T so = EditorGUILayout.ObjectField(selectedRow.row, typeof(T), false, GUILayout.Width(150f)) as T;
-            if(EditorGUI.EndChangeCheck())
-            {
-                datatable.SetEntry(selectedRow.key, so);
-                EditorUtility.SetDirty(datatable as ScriptableObject);
-                selectedRow.row = so;
-                OnSearchUpdated();
-                Repaint();
-            }
-
             if (selectedRow != null && GUILayout.Button("Rename", GUILayout.Width(100f)))
             {
                 renameAction = true;
@@ -286,10 +287,9 @@ namespace TotBaseEditor.DataTable
                 }
 
                 //todo CTRL - Z
-                T r = datatable.CreateStruct();
-                DataTableRow uir = new DataTableRow(headers.Count, r, idbox);
+                DataTableRow uir = CreateRow(idbox, null);
                 uir.Clicked += OnRowClicked;
-                datatable.SetEntry(idbox, r);
+                datatable.SetEntry(idbox, null);
                 rows.Add(uir);
                 EditorUtility.SetDirty((ScriptableObject)datatable);
                 GUI.FocusControl("");

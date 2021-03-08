@@ -5,6 +5,7 @@ using UnityEditor;
 using System.Reflection;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace TotBaseEditor.DataTable
 {
@@ -20,6 +21,7 @@ namespace TotBaseEditor.DataTable
         }
 
         private float[] sizes;
+        private List<Func<ScriptableObject,string>> columnDefinitions = new List<Func<ScriptableObject, string>>(); 
         public ScriptableObject row;
         private float totalSize;
         public string key;
@@ -31,8 +33,6 @@ namespace TotBaseEditor.DataTable
         public void Draw()
         {
             Rect line = EditorGUILayout.BeginHorizontal(GUILayout.Width(totalSize), GUILayout.Height(ROWHEIGHT));
-            FieldInfo[] fields = row.GetType().GetFields();
-
             GUI.DrawTexture(line, EditorGUIUtility.whiteTexture, ScaleMode.StretchToFill, false, 1f, new Color(.3f, .3f, .3F), 0, 0);
             Rect cell;
 
@@ -46,18 +46,15 @@ namespace TotBaseEditor.DataTable
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(5f);
 
-            object value;
+            string text = "";
             for (int i = 0; i < sizes.Length; i++)
             {
                 cell = EditorGUILayout.BeginHorizontal(GUILayout.Width(sizes[i]), GUILayout.Height(ROWHEIGHT));
                 GUI.DrawTexture(cell, EditorGUIUtility.whiteTexture, ScaleMode.StretchToFill, false, 1f, new Color(.2f, .2f, .2F), 0, 0);
-                value = fields[i].GetValue(row);
-                if (fields[i].FieldType.IsEnum && fields[i].FieldType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
-                    EditorGUILayout.LabelField(((int)value).ToString(), GUILayout.Width(sizes[i]));
-                else if (value != null)
-                    EditorGUILayout.LabelField(value.ToString(), GUILayout.Width(sizes[i]));
-                else
-                    EditorGUILayout.LabelField("null", GUILayout.Width(sizes[i]));
+                text = "N/A";
+                if(row != null)
+                    text = columnDefinitions[i]?.Invoke(row);
+                EditorGUILayout.LabelField(text, GUILayout.Width(sizes[i]));
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.Space(5f);
             }
@@ -67,6 +64,23 @@ namespace TotBaseEditor.DataTable
             {
                 OnClicked();
             }
+        }
+
+        public void AppendColumn(Func<ScriptableObject,string> function)
+        {
+            columnDefinitions.Add(function);
+        }
+
+        public string GetSearchString()
+        {
+            if(row == null)
+                 return "";
+            StringBuilder builder = new StringBuilder();
+            foreach(Func<ScriptableObject, string> column in columnDefinitions)
+            {
+                builder.Append(column.Invoke(row));
+            }
+            return builder.ToString();
         }
 
         public ICollection<string> GetFields()

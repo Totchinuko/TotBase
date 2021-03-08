@@ -13,7 +13,6 @@ namespace TotBase.DataTable
         void ForEachEntries(Action<string, T> action);
         bool ContainsKey(string key);
         IEnumerable<string> GetKeys();
-        T CreateStruct();
         int GetCount();
         Type GetStructType();
     }

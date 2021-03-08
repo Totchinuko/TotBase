@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-namespace TotBaseEditor.DataTable
+namespace TotBaseEditor
 {
     public class DataTableHeader
     {

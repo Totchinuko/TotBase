@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace TotBase.DataTable
 {
-    public abstract class DataTable<T> : ScriptableObject where T : ScriptableObject
+    public abstract class DataTable<T> : ScriptableObject, IDataTable<T>, ISerializationCallbackReceiver where T : ScriptableObject
     {
         [SerializeField]
         private List<string> keys = new List<string>();
@@ -45,10 +45,10 @@ namespace TotBase.DataTable
             data.Clear();
 
             for (int i = 0; i < keys.Count; i++)
-                data.Add(keys[i], values[i]);
-        }
+                data.Add(keys[i], values[i]); 
+        } 
 
-        public void OnBeforeSerialize()
+        public void OnBeforeSerialize() 
         {
             keys.Clear();
             values.Clear();
