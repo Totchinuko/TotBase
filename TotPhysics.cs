@@ -11,7 +11,7 @@ namespace TotBase
         /// </summary>
         /// <param name="distance"></param>
         /// <returns></returns>
-        public static bool GetFourPointGroundData(Vector3 origin, Vector3 forward, float radius, float distance, LayerMask mask, out GroundData data)
+        public static bool GetFourPointGroundData(Vector3 origin, Vector3 forward, float radius, float distance, LayerMask mask, out GroundData data, bool debug = false)
         {
             // testing if we are on the ground first            
             RaycastHit hit;
@@ -34,9 +34,9 @@ namespace TotBase
             Ray rayD = new Ray(origin + (-forward + -right).normalized * radius, Vector3.down);
 
             bool hittingA = Physics.SphereCast(rayA, 0.02f, out RaycastHit hitA, distance, mask, QueryTriggerInteraction.Ignore);
-            bool hittingB = Physics.SphereCast(rayA, 0.02f, out RaycastHit hitB, distance, mask, QueryTriggerInteraction.Ignore);
-            bool hittingC = Physics.SphereCast(rayA, 0.02f, out RaycastHit hitC, distance, mask, QueryTriggerInteraction.Ignore);
-            bool hittingD = Physics.SphereCast(rayA, 0.02f, out RaycastHit hitD, distance, mask, QueryTriggerInteraction.Ignore);
+            bool hittingB = Physics.SphereCast(rayB, 0.02f, out RaycastHit hitB, distance, mask, QueryTriggerInteraction.Ignore);
+            bool hittingC = Physics.SphereCast(rayC, 0.02f, out RaycastHit hitC, distance, mask, QueryTriggerInteraction.Ignore);
+            bool hittingD = Physics.SphereCast(rayD, 0.02f, out RaycastHit hitD, distance, mask, QueryTriggerInteraction.Ignore);
 
             // more complexe ground checking
             if((!hittingA && !hittingD) || (!hittingC && !hittingB))
@@ -62,7 +62,26 @@ namespace TotBase
                 normal = normal,
                 angle = Mathf.Round(Vector3.Angle(normal, Vector3.up))
             };
+            if(debug)
+            {
+                DebugDraw.DrawMarker(pointA, .1f, hittingA ? Color.yellow : Color.red, 0f, false);
+                DebugDraw.DrawMarker(pointB, .1f, hittingB ? Color.yellow : Color.red, 0f, false);
+                DebugDraw.DrawMarker(pointC, .1f, hittingC ? Color.yellow : Color.red, 0f, false);
+                DebugDraw.DrawMarker(pointD, .1f, hittingD ? Color.yellow : Color.red, 0f, false);
+            }
+
             return true;
         }  
+
+        /// <summary>
+        /// Get the ground distance check depending on radius check and max angle actor can stand on
+        /// </summary>
+        /// <param name="radius"></param>
+        /// <param name="maxDegAngle"></param>
+        /// <returns></returns>
+        public static float GetCheckDistance(float radius, float maxDegAngle)
+        {
+            return Mathf.Tan(maxDegAngle * Mathf.Deg2Rad) * radius;
+        }
     }
 }
