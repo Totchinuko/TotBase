@@ -11,19 +11,15 @@ namespace TotBase
         /// </summary>
         /// <param name="distance"></param>
         /// <returns></returns>
-        public static bool GetFourPointGroundData(Vector3 origin, Vector3 forward, float radius, float distance, LayerMask mask, out GroundData data, bool debug = false)
+        public static void GetFourPointGroundData(Vector3 origin, Vector3 forward, float radius, float distance, LayerMask mask, ref GroundData data, bool debug = false)
         {
             // testing if we are on the ground first            
             RaycastHit hit;
             if(!Physics.SphereCast(origin, radius, -Vector3.up, out hit, distance, mask, QueryTriggerInteraction.Ignore))
             {
-                data = new GroundData()
-                {
-                    position = hit.point,
-                    normal = Vector3.up,
-                    angle = 0f
-                };
-                return false;
+                data.onGround = false;
+                data.position = hit.point;
+                return;
             }
 
             Vector3 right = Vector3.Cross(Vector3.up, forward);
@@ -41,13 +37,9 @@ namespace TotBase
             // more complexe ground checking
             if((!hittingA && !hittingD) || (!hittingC && !hittingB))
             {
-                data = new GroundData()
-                {
-                    position = hit.point,
-                    normal = Vector3.up,
-                    angle = 0f
-                };
-                return false;
+                data.onGround = false;
+                data.position = hit.point;
+                return;
             }
 
             Vector3 pointA = hittingA ? hitA.point : hitD.point + (hit.point - hitD.point) * 2;
@@ -55,13 +47,11 @@ namespace TotBase
             Vector3 pointC = hittingC ? hitC.point : hitB.point + (hit.point - hitB.point) * 2;
             Vector3 pointD = hittingD ? hitD.point : hitA.point + (hit.point - hitA.point) * 2;
 
-            Vector3 normal = Vector3.Cross(pointA - pointD, pointC - pointB).normalized;
-            data = new GroundData()
-            {
-                position = hit.point,
-                normal = normal,
-                angle = Mathf.Round(Vector3.Angle(normal, Vector3.up))
-            };
+            data.onGround = true;
+            data.position = hit.point;
+            data.normal = Vector3.Cross(pointA - pointD, pointC - pointB).normalized;
+            data.angle = Mathf.Round(Vector3.Angle(data.normal, Vector3.up));
+
             if(debug)
             {
                 DebugDraw.DrawMarker(pointA, .1f, hittingA ? Color.yellow : Color.red, 0f, false);
@@ -69,8 +59,6 @@ namespace TotBase
                 DebugDraw.DrawMarker(pointC, .1f, hittingC ? Color.yellow : Color.red, 0f, false);
                 DebugDraw.DrawMarker(pointD, .1f, hittingD ? Color.yellow : Color.red, 0f, false);
             }
-
-            return true;
         }  
 
         /// <summary>

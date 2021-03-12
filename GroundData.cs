@@ -3,9 +3,9 @@ using System;
 
 namespace TotBase
 {
-    [Serializable]
-    public struct GroundData
+    public class GroundData
     {
+        public bool onGround;
         public Vector3 position;
         public Vector3 normal;
         public float angle;
