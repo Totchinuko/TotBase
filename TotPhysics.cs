@@ -11,7 +11,7 @@ namespace TotBase
         /// </summary>
         /// <param name="distance"></param>
         /// <returns></returns>
-        public static void GetFourPointGroundData(Vector3 origin, Vector3 forward, float radius, float distance, LayerMask mask, ref GroundData data, bool debug = false)
+        public static void GetFourPointGroundData(Vector3 origin, Vector3 forward, float radius, float distance, float maxGroundAngle, LayerMask mask, ref GroundData data, bool debug = false)
         {
             // testing if we are on the ground first            
             RaycastHit hit;
@@ -23,16 +23,17 @@ namespace TotBase
             }
 
             Vector3 right = Vector3.Cross(Vector3.up, forward);
+            float addedDistance = TotPhysics.GetCheckDistance(radius, maxGroundAngle);
             
             Ray rayA = new Ray(origin + (forward + right).normalized * radius, Vector3.down);
             Ray rayB = new Ray(origin + (forward + -right).normalized * radius, Vector3.down);
             Ray rayC = new Ray(origin + (-forward + right).normalized * radius, Vector3.down);
             Ray rayD = new Ray(origin + (-forward + -right).normalized * radius, Vector3.down);
 
-            bool hittingA = Physics.SphereCast(rayA, 0.02f, out RaycastHit hitA, distance, mask, QueryTriggerInteraction.Ignore);
-            bool hittingB = Physics.SphereCast(rayB, 0.02f, out RaycastHit hitB, distance, mask, QueryTriggerInteraction.Ignore);
-            bool hittingC = Physics.SphereCast(rayC, 0.02f, out RaycastHit hitC, distance, mask, QueryTriggerInteraction.Ignore);
-            bool hittingD = Physics.SphereCast(rayD, 0.02f, out RaycastHit hitD, distance, mask, QueryTriggerInteraction.Ignore);
+            bool hittingA = Physics.SphereCast(rayA, 0.02f, out RaycastHit hitA, distance + addedDistance, mask, QueryTriggerInteraction.Ignore);
+            bool hittingB = Physics.SphereCast(rayB, 0.02f, out RaycastHit hitB, distance + addedDistance, mask, QueryTriggerInteraction.Ignore);
+            bool hittingC = Physics.SphereCast(rayC, 0.02f, out RaycastHit hitC, distance + addedDistance, mask, QueryTriggerInteraction.Ignore);
+            bool hittingD = Physics.SphereCast(rayD, 0.02f, out RaycastHit hitD, distance + addedDistance, mask, QueryTriggerInteraction.Ignore);
 
             // more complexe ground checking
             if((!hittingA && !hittingD) || (!hittingC && !hittingB))
