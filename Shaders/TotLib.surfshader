@@ -122,6 +122,16 @@ float3 rotate3D_X(float3 pos, float rotation, float3 center)
 	);
 }
 
+float Noise_2D(float2 pos, float scale)
+{
+	float2 id = floor(pos * scale);
+	float2 gv = frac(pos * scale);
+	float2 blend = pow(gv, 2) * (3 - gv * 2);
+	float x1 = lerp(N21(id), N21(id + float2(1,0)), blend.x);
+	float x2 = lerp(N21(id + float2(0,1)), N21(id + float2(1,1)), blend.x);
+	return lerp(x1, x2, blend.y);
+}
+
 float Noise_3D(float3 pos, float scale)
 {
     float3 id = floor(pos * scale);
