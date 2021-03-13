@@ -82,7 +82,7 @@ float N31(float3 p)
     return frac(sin(r) * 4871);
 }
 
-float N21(float3 p)
+float N21(float2 p)
 {
     float r = p.x * 348 + p.y * 7450;
     return frac(sin(r) * 4871);
