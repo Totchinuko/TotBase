@@ -3,9 +3,25 @@ using System;
 
 namespace TotBase
 {
-    public static class TotPhysics
+    public static class Utils
     {
-        
+        public static Vector2 MousePosToScreenUV(Vector2 mousePosition, bool normalized = true)
+        {
+
+            mousePosition.x /= Screen.width;
+            mousePosition.y /= Screen.height;
+            if(normalized)
+            {
+                float ratio = Screen.width / Screen.height;
+                if (ratio < 1f)
+                    mousePosition.y *= ratio;
+                else
+                    mousePosition.x /= ratio;
+            }
+            return mousePosition;
+        }
+
+                
         /// <summary>
         /// Use 4 raycast for smooth normal calculation
         /// </summary>
