@@ -1,0 +1,314 @@
+BEGIN_OPTIONS
+ShaderName "TotBase/Lib"
+Stackable "True"
+END_OPTIONS
+
+BEGIN_CODE 
+#ifndef __TOT_SHADER_LIB__
+#define __TOT_SHADER_LIB__
+#define FLT_MIN 1.175494351e-38
+
+float3 Project(float3 from, float3 to)
+{
+    return to * dot(from, to) / dot(to, to);
+}
+
+float3 Contrast(float3 color, float contrast)
+{
+    float midpoint = pow(0.5, 2.2);
+    return (color - midpoint) * contrast + midpoint;
+}
+
+float3 HDRPEmission(float3 ldrColor, float luminanceIntensity, float exposureWeight)
+{
+    float inverseExposureMultiplier = GetInverseCurrentExposureMultiplier();
+    //float inverseExposureMultiplier = 1;
+    float3 hdrColor = ldrColor * luminanceIntensity;
+    hdrColor = lerp(hdrColor * inverseExposureMultiplier, hdrColor, exposureWeight);
+    return hdrColor;
+}
+
+float3 TangentNormalFromHeight(float height, float3 pos, float3x3 TBNMatrix)
+{
+    float3 posDDX = ddx(pos);
+    float3 posDDY = ddy(pos);
+    float3 crossX = cross(TBNMatrix[2].xyz, posDDX);
+    float3 crossY = cross(posDDY, TBNMatrix[2].xyz);
+    float d = dot(posDDX, crossY);
+    float sgn = d < 0.0 ? -1.0 : 1.0;
+    float surface = sgn / max(0.000000000000001192093, abs(d));
+    float heightDDX = ddx(height);
+    float heightDDY = ddy(height);
+    float3 surfGrad = surface * (heightDDX*crossY + heightDDY*crossX);
+    return TransformWorldToTangent(SafeNormalize(TBNMatrix[2].xyz - (surfGrad)), TBNMatrix);
+}
+
+float3 NormalFromHeight(float height, float strength, float3 wPos){
+	float3 posDDX = ddx(wPos);
+	float3 posDDY = ddy(wPos);
+	float3 crossX = cross(float3(0,1,0), posDDX);
+	float3 crossY = cross(float3(0,1,0), posDDY);
+	float3 dt = abs(dot(crossY, posDDX));
+	float h = strength * height;
+	float3 n = ((((h + ddx(h)) - h) * crossY) + (((h + ddy(h)) - h) * crossX)) * sign(dt);
+	n.y *= -1.0;
+	return normalize((dt * float3(0,1,0)) - n).xyz;
+}
+
+float3 Blend_NormalMap(float3 A, float3 B)
+{
+    return SafeNormalize(float3(A.rg + B.rg, A.b * B.b));
+}
+
+float3 Blend_NormalReorient(float3 A, float3 B)
+{
+    float3 t = A.xyz + float3(0.0, 0.0, 1.0);
+	float3 u = B.xyz * float3(-1.0, -1.0, 1.0);
+	return (t / t.z) * dot(t, u) - u;
+}
+
+float3 Blend_LinearLight(float3 target, float3 blend)
+{
+    float3 above = float3(round(blend.x), round(blend.y), round(blend.z));
+    float3 under = 1 - above;
+    float3 colorAbove = (blend - 0.5) * 2 + target;
+    float3 colorUnder = blend * 2 + target - 1;
+    return colorAbove * above + colorUnder * under;
+}
+
+float N31(float3 p)
+{
+    float r = p.x * 348 + p.y * 7450 + p.z * 2948;
+    return frac(sin(r) * 4871);
+}
+
+float N21(float2 p)
+{
+    float r = p.x * 348 + p.y * 7450;
+    return frac(sin(r) * 4871);
+}
+
+float3 N33(float3 p)
+{	
+	float3 a = frac(p.xyz*float3(123.34, 234.34, 345.65));
+	a += dot(a, a+34.45);
+	return frac(float3(a.x*a.y, a.x*a.z, a.y*a.z));
+}
+
+float3 rotate3D_Z(float3 pos, float rotation, float3 center)
+{
+	return float3(
+		cos(rotation) * (pos.x - center.x) - sin(rotation) * (pos.y - center.y) + center.x,
+		cos(rotation) * (pos.y - center.y) + sin(rotation) * (pos.x - center.x) + center.y,
+		pos.z
+	);
+}
+
+float3 rotate3D_Y(float3 pos, float rotation, float3 center)
+{
+	return float3(
+		cos(rotation) * (pos.x - center.x) + sin(rotation) * (pos.z - center.z) + center.x,
+		pos.y,
+		cos(rotation) * (pos.z - center.z) - sin(rotation) * (pos.x - center.x) + center.z
+	);
+}
+
+float3 rotate3D_X(float3 pos, float rotation, float3 center)
+{
+	return float3(
+		pos.x,
+		cos(rotation) * (pos.y - center.y) - sin(rotation) * (pos.z - center.z) + center.y,
+		cos(rotation) * (pos.z - center.z) + sin(rotation) * (pos.y - center.y) + center.z
+	);
+}
+
+float Noise_2D(float2 pos, float scale)
+{
+	float2 id = floor(pos * scale);
+	float2 gv = frac(pos * scale);
+	float2 blend = pow(gv, 2) * (3 - gv * 2);
+	float x1 = lerp(N21(id), N21(id + float2(1,0)), blend.x);
+	float x2 = lerp(N21(id + float2(0,1)), N21(id + float2(1,1)), blend.x);
+	return lerp(x1, x2, blend.y);
+}
+
+float Noise_3D(float3 pos, float scale)
+{
+    float3 id = floor(pos * scale);
+    float3 gv = frac(pos * scale);
+    float3 blend = pow(gv, 2) * (3 - gv * 2);
+    float x1 = lerp(N31(id), N31(id + float3(1,0,0)), blend.x);
+    float x2 = lerp(N31(id + float3(0,1,0)), N31(id + float3(1,1,0)), blend.x);
+    float x3 = lerp(N31(id + float3(0,0,1)), N31(id + float3(1,0,1)), blend.x);
+    float x4 = lerp(N31(id + float3(0,1,1)), N31(id + float3(1,1,1)), blend.x);
+    float y1 = lerp(x1, x2, blend.y);
+    float y2 = lerp(x3, x4, blend.y);
+    return lerp(y1, y2, blend.z);
+}
+
+float CloudNoise_3D(float3 pos, float scale)
+{
+    float r = Noise_3D(pos, scale);
+    r += Noise_3D(pos, scale * 2) * 0.5;
+    r += Noise_3D(pos, scale * 2 * 2) * 0.250;
+    r += Noise_3D(pos, scale * 2 * 2 * 2) * 0.125;
+	r += Noise_3D(pos, scale  * 2 * 2 * 2 * 2) * 0.0625;
+    return r / 2;
+}
+
+float voronoi_euclidean(float3 v)
+{
+	return length(v);
+}
+
+float voronoi_manhatan(float3 v)
+{
+	return abs(v.x) + abs(v.y) + abs(v.z);
+}
+
+float voronoi_chebychev(float3 v)
+{
+	return max(abs(v.x), max(abs(v.y), abs(v.z)));
+}
+
+float voronoi_minkowski(float3 v, float e)
+{
+	return pow(pow(abs(v.x), e) + pow(abs(v.y), e) + pow(abs(v.z), e), 1.0 / e);
+}
+
+float VoronoiF1_3D(float3 position, float time, float exponent)
+{
+	float3 id = floor(position);
+	float3 gv = frac(position) - 0.5;
+
+	float minDist = 100;
+
+	for(float z=-1; z<=1; z++)
+	{
+		for(float y=-1; y<=1; y++)
+		{
+			for(float x=-1; x<=1;x++)
+			{
+
+				float3 offs = float3(x, y, z);
+				float3 n = N33(id + offs);				
+				float3 p = offs+sin(n*time)*0.5;
+				p -= gv;
+
+				float d = voronoi_minkowski(p, exponent);
+				minDist = min(d, minDist);
+			}
+		}	
+	}
+	
+	return minDist;
+}
+
+float3 VoronoiID_3D(float3 position, float time, float exponent)
+{
+	float3 id = floor(position);
+	float3 gv = frac(position) - 0.5;
+
+	float minDist = 100;
+	float3 minOffset;
+	for(float z=-1; z<=1; z++)
+	{
+		for(float y=-1; y<=1; y++)
+		{
+			for(float x=-1; x<=1;x++)
+			{
+
+				float3 offs = float3(x, y, z);
+
+				float3 n = N33(id + offs);				
+				float3 p = offs+sin(n*time)*0.5;
+				p -= gv;
+				float d = voronoi_minkowski(p, exponent);
+
+				// painfuly slow
+				if(d<minDist)
+				{
+					minDist = d;		
+					minOffset = offs;
+				}
+					
+			}
+		}	
+	}
+	
+	return N33(id + minOffset);
+}
+
+
+float VoronoiF2_3D(float3 position, float time, float exponent)
+{
+	float3 id = floor(position);
+	float3 gv = frac(position) - 0.5;
+
+	float minDist = 100;
+	float minDistF2 = 100;
+	for(float z=-1; z<=1; z++)
+	{
+		for(float y=-1; y<=1; y++)
+		{
+			for(float x=-1; x<=1;x++)
+			{
+
+				float3 offs = float3(x, y, z);
+
+				float3 n = N33(id + offs);				
+				float3 p = offs+sin(n*time)*0.5;
+				p -= gv;
+
+				float d = voronoi_minkowski(p, exponent);
+				
+				// This is so slow, we are discontinuing it. 
+				// if(d<minDist)
+				// {
+				// 	minDistF2 = minDist;
+				// 	minDist = d;
+				// } else if (d < minDistF2){
+				// 	minDistF2 = d;
+				// }
+					
+			}
+		}	
+	}
+	
+	return minDistF2;
+}
+
+// this use Voronoi F2, as of now, it is way too slow
+float ScratchMask_3D(float3 pos, float scale, float time)
+{
+	float cloud = smoothstep(-0.77, 2.59, CloudNoise_3D(pos, 10.5));
+	float fineCloud = CloudNoise_3D(pos, 100);
+	float blend = Contrast(CloudNoise_3D(pos, 10).xxx - 0.08, 3.61).x;
+	float f2 = VoronoiF2_3D(pos * scale, time, cloud);
+	float f1 = VoronoiF1_3D(pos * scale, time, cloud);
+	float pattern = Blend_LinearLight(fineCloud.xxx, smoothstep(0, 0.32, f2 - f1).xxx).x;
+	pattern = smoothstep(0, 0.32, pattern);
+	return saturate(lerp(pattern, 1, blend));
+}
+
+void Dissolve_3D(float dissolve, float3 position, float3 objPosition, float noiseScale, float3 axis, float scale, float objEmissionIntensity, float dissolveEmissionIntensity, float emissionWeight, float3 objEmissionColor, float3 dissolveColor, float dissolveSize, out float3 emission, out float alpha)
+{
+    float diss = lerp(-0.5, 0.5, dissolve);
+    dissolveSize *= 0.5;
+    float3 dist = position - objPosition;
+    float noise = Noise_3D(dist, noiseScale);
+    float3 proj = Project(dist * scale, axis) + axis;
+    float p = saturate(length(proj * 0.5));
+    p = smoothstep(0.5 - dissolveSize + diss, 0.5 + dissolveSize + diss, p);
+    p = Blend_LinearLight(noise.xxx, p.xxx).x;
+    float rim = smoothstep(0.45, 0.5, p) - smoothstep(0.5, 0.55, p);
+
+    float emissionIntensity = lerp(objEmissionIntensity, dissolveEmissionIntensity, rim);
+    float3 emissionColor = lerp(objEmissionColor, dissolveColor, rim);
+
+    emission = emissionColor * emissionIntensity;
+    alpha = p;
+}
+
+#endif
+END_CODE
