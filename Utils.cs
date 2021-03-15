@@ -39,7 +39,7 @@ namespace TotBase
             }
 
             Vector3 right = Vector3.Cross(Vector3.up, forward);
-            float addedDistance = TotPhysics.GetCheckDistance(radius, maxGroundAngle);
+            float addedDistance = GetCheckDistance(radius, maxGroundAngle);
             
             Ray rayA = new Ray(origin + (forward + right).normalized * radius, Vector3.down);
             Ray rayB = new Ray(origin + (forward + -right).normalized * radius, Vector3.down);
