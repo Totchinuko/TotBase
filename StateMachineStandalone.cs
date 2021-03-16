@@ -52,7 +52,7 @@ namespace TotBase
 
         protected T ConfigureDelegate<T>(T methodRoot) where T : class
         {
-            return Extension.ConfigureDelegate(this, methodRoot, cache);
+            return Utils.ConfigureDelegate(this, methodRoot, cache);
         }
 
         protected virtual void EnterState() { DoEnterState?.Invoke(); }

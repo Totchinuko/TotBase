@@ -253,7 +253,7 @@ namespace TotBase
 
         private void LoadUserConfig()
         {
-            if (Extension.TryGetFileContent(out string config, "Config", "Inputs.json"))
+            if (Utils.TryGetFileContent(out string config, "Config", "Inputs.json"))
                 userConfig = JsonUtility.FromJson<InputControllerConfig>(config);
             else
                 userConfig = Instantiate(defaultInputs);
@@ -262,7 +262,7 @@ namespace TotBase
         private void SaveUserConfig()
         {
             string json = JsonUtility.ToJson(userConfig);
-            Extension.TrySetFileContent(json, "Config", "Inputs.json");
+            Utils.TrySetFileContent(json, "Config", "Inputs.json");
         }
 
         private void UpdateConfig()

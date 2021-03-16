@@ -1,5 +1,9 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.IO;
 
 namespace TotBase
 {
@@ -88,5 +92,140 @@ namespace TotBase
         {
             return Mathf.Tan(maxDegAngle * Mathf.Deg2Rad) * radius;
         }
+
+        public static Vector3 GetRandomPointInCircle(Vector3 center, Vector3 direction, float radius)
+        {
+            // Find the center of the random circle in front of the camera
+            center = center + direction.normalized * radius;
+            Vector2 center2D = new Vector2(center.x, center.z);
+            Vector2 rand = center2D + UnityEngine.Random.insideUnitCircle * radius;
+            return new Vector3(rand.x, center.y, rand.y);
+        }
+
+        public static Vector3 GetRandomDirection(Vector3 direction, float maxAngle)
+        {
+            Vector3 randDirection = UnityEngine.Random.insideUnitSphere;
+            float angle = Vector3.Angle(direction, randDirection);
+            if(angle > maxAngle)
+            {
+                float lerp = UnityEngine.Random.Range(0f, maxAngle / angle);
+                return Vector3.Lerp(direction, randDirection, lerp);
+            }
+                
+            return randDirection;
+
+        }
+
+        public static IEnumerable<T> GetObjectWithInterface<T>() where T : class
+        {
+            // use reflection to get all QualityDefinition and populate the QualityLevel
+            return from t in GetClassWithInterface<T>()
+                   where t.GetConstructor(Type.EmptyTypes) != null
+                   select Activator.CreateInstance(t) as T;
+        }
+
+        public static IEnumerable<Type> GetClassWithInterface<T>() where T : class
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => typeof(T).IsAssignableFrom(x) && x.IsClass && !x.IsAbstract);
+        }
+
+        public static IEnumerable<Type> GetClassWithAttribute<T>() where T : Attribute
+        {
+            return from t in Assembly.GetExecutingAssembly().GetTypes()
+                   where t.GetAttribute<T>() != null
+                   select t;
+        }
+
+        public static bool TryParseVector2Int(string serialized, out Vector2Int value)
+        {
+            value = Vector2Int.zero;
+            int x, y;
+            string[] split = serialized.Split(';');
+            if (split.Length == 2 && int.TryParse(split[0], out x) && int.TryParse(split[1], out y))
+            {
+                value = new Vector2Int(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
+        
+        /// <summary>
+        /// Use reflexion to find matching method given the current state and main method name. Build a cache for futur lookup. Use default if none found.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="methodRoot"></param>
+        /// <param name="defaultMethod"></param>
+        /// <returns></returns>
+        public static T ConfigureDelegate<T, R>(R machine, T methodRoot, Dictionary<Enum, Dictionary<int, Delegate>> cache) where T : class where R : class, IStateMachine
+        {
+            Delegate root = methodRoot as Delegate;
+            // create cache if it don't exist already for the given state
+            Dictionary<int, Delegate> lookup;
+            if (!cache.TryGetValue(machine.CurrentState, out lookup))
+                cache[machine.CurrentState] = lookup = new Dictionary<int, Delegate>();
+
+            Delegate returnValue;
+            int hash = root.Method.Name.GetHashCode();
+            if (!lookup.TryGetValue(hash, out returnValue))
+            {
+                // find using reflexion a method in the current type that match a naming convention (State_RootMethode())
+                MethodInfo method = machine.GetType().GetMethod($"{machine.CurrentState.ToString()}_{root.Method.Name}", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.InvokeMethod);
+
+                // use passed default if no matching method exists and store the result in cache
+                if (method != null)
+                    returnValue = Delegate.CreateDelegate(typeof(T), machine, method);
+                lookup[hash] = returnValue;
+            }
+            return returnValue as T;
+        }
+        public static string GetDocumentPathOrCreate()
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            path = Path.Combine(path, Application.companyName, Application.productName);
+            Directory.CreateDirectory(path);
+            return path;
+        }
+
+        public static bool TryGetFile(out string absolutePath, params string[] relativePath) => TryGetFile(out absolutePath, Path.Combine(relativePath));
+        public static bool TryGetFile(out string absolutePath, string relativePath)
+        {
+            absolutePath = Path.Combine(GetDocumentPathOrCreate(), relativePath);
+            if (File.Exists(absolutePath))
+                return true;
+            return false;
+        }
+
+        public static bool TryGetFileContent(out string content, params string[] relativePath) => TryGetFileContent(out content, Path.Combine(relativePath));
+        public static bool TryGetFileContent(out string content, string relativePath)
+        {
+            content = "";
+            if(TryGetFile(out string path, relativePath))
+            {
+                content = File.ReadAllText(path);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool TrySetFileContent(string content, params string[] relativePath) => TrySetFileContent(content, Path.Combine(relativePath));
+        public static bool TrySetFileContent(string content, string relativePath)
+        {
+            try
+            {
+                string path = Path.Combine(GetDocumentPathOrCreate(), relativePath);
+                File.WriteAllText(path, content);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+
     }
 }
