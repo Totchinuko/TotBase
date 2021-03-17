@@ -102,6 +102,10 @@ namespace TotBase
             return new Vector3(rand.x, center.y, rand.y);
         }
 
+        public static Vector3 GetRandomDirectionPlane(Vector3 direction, Vector3 normal, float maxAngle) {
+                return Quaternion.AngleAxis(UnityEngine.Random.Range(-(maxAngle / 2), maxAngle / 2), normal) * direction;
+        }
+
         public static Vector3 GetRandomDirection(Vector3 direction, float maxAngle)
         {
             Vector3 randDirection = UnityEngine.Random.insideUnitSphere;
