@@ -5,6 +5,7 @@ using System.Reflection;
 using System;
 using System.Linq;
 using System.IO;
+using System.Text;
 
 namespace TotBaseEditor
 {
@@ -90,6 +91,7 @@ namespace TotBaseEditor
             elements.Clear();
 
             elements.Add(new PCMCustomMenu("csharp Script", CreateCSharpScript));
+            elements.Add(new PCMCustomMenu("SurfShader", CreateSurfShader));
 
             AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
@@ -125,8 +127,30 @@ namespace TotBaseEditor
 
         private void CreateCSharpScript() {
             string folder = EditorUtils.getActiveFolderPath();
-            string filePath = Path.Combine(folder, "NewScript.cs");
+            string filePath = AssetDatabase.GenerateUniqueAssetPath (folder + "/NewScript.cs");
             File.WriteAllText(filePath, "");
+            AssetDatabase.Refresh();
+            UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath(filePath, typeof(MonoScript));
+            Selection.SetActiveObjectWithContext(obj, null);
+        }
+
+        private void CreateSurfShader() {
+            StringBuilder code = new StringBuilder();
+            code.AppendLine("BEGIN_OPTIONS");
+            code.AppendLine("");
+            code.AppendLine("END_OPTIONS");
+            code.AppendLine("BEGIN_PROPERTIES");
+            code.AppendLine("");
+            code.AppendLine("END_PROPERTIES");
+            code.AppendLine("BEGIN_CBUFFER");
+            code.AppendLine("");
+            code.AppendLine("END_CBUFFER");
+            code.AppendLine("BEGIN_CODE");
+            code.AppendLine("");
+            code.AppendLine("END_CODE");
+            string folder = EditorUtils.getActiveFolderPath();
+            string filePath = AssetDatabase.GenerateUniqueAssetPath (folder + "/NewShader.surfshader");
+            File.WriteAllText(filePath, code.ToString());
             AssetDatabase.Refresh();
             UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath(filePath, typeof(MonoScript));
             Selection.SetActiveObjectWithContext(obj, null);
