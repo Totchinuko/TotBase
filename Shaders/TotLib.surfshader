@@ -76,10 +76,21 @@ float3 Blend_LinearLight(float3 target, float3 blend)
     return colorAbove * above + colorUnder * under;
 }
 
+float N41(float4 p)
+{
+    float r = p.x * 348 + p.y * 7450 + p.z * 2948 + p.w * 3394;
+    return frac(sin(r) * 4871);
+}
+
 float N31(float3 p)
 {
     float r = p.x * 348 + p.y * 7450 + p.z * 2948;
     return frac(sin(r) * 4871);
+}
+
+float N11(float p) {
+	float r = p * 348;
+	return frac(sin(r) * 4871);
 }
 
 float N21(float2 p)
@@ -120,6 +131,13 @@ float3 rotate3D_X(float3 pos, float rotation, float3 center)
 		cos(rotation) * (pos.y - center.y) - sin(rotation) * (pos.z - center.z) + center.y,
 		cos(rotation) * (pos.z - center.z) + sin(rotation) * (pos.y - center.y) + center.z
 	);
+}
+
+float Noise_1D(float pos, float scale) {
+	float id = floor(pos * scale);
+	float gv = frac(pos * scale);
+	float blend = pow(gv, 2) * (3 - gv * 2);
+	return lerp(N11(id), N11(id + 1), blend);
 }
 
 float Noise_2D(float2 pos, float scale)
