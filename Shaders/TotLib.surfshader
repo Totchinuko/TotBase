@@ -133,6 +133,14 @@ float3 rotate3D_X(float3 pos, float rotation, float3 center)
 	);
 }
 
+float Noise_4D_BlendZOnly(float4 pos)
+{
+    float4 id = floor(pos);
+    float4 gv = frac(pos);
+    float4 blend = pow(gv, 2) * (3 - gv * 2);
+    return lerp(N41(id), N41(id + float4(0,0,0,1)), blend.w);
+}
+
 float Noise_1D(float pos, float scale) {
 	float id = floor(pos * scale);
 	float gv = frac(pos * scale);
