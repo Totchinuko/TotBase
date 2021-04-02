@@ -24,7 +24,10 @@ public abstract class SerializableDictionaryDrawer : PropertyDrawer
             SerializedProperty keysProperty = property.FindPropertyRelative(KEYS_PROPERTY_PATH);
             SerializedProperty valuesProperty = property.FindPropertyRelative(VALUES_PROPERTY_PATH);
 
-            position = EditorGUI.PrefixLabel(position, label);
+            Rect labelField = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+            EditorGUI.LabelField(labelField, label, EditorStyles.boldLabel);
+            position.y += EditorGUIUtility.singleLineHeight;
+            position.height -= EditorGUIUtility.singleLineHeight;
 
             if (keysProperty.arraySize == 0)
             {
@@ -105,7 +108,7 @@ public abstract class SerializableDictionaryDrawer : PropertyDrawer
 
         if (keysProperty.arraySize == 0)
         {
-            return EditorGUIUtility.singleLineHeight;
+            return EditorGUIUtility.singleLineHeight * 2;
         }
         else
         {
@@ -119,7 +122,7 @@ public abstract class SerializableDictionaryDrawer : PropertyDrawer
                 totalHeight += EditorGUIUtility.standardVerticalSpacing;
             }
 
-            return totalHeight;
+            return totalHeight + EditorGUIUtility.singleLineHeight;
         }
     }
 
