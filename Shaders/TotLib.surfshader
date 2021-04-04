@@ -237,6 +237,16 @@ float Noise_3D(float3 pos, float scale)
     return lerp(y1, y2, blend.z);
 }
 
+float CloudNoise_2D(float2 pos, float scale)
+{
+    float r = Noise_2D(pos, scale);
+    r += Noise_2D(pos, scale * 2) * 0.5;
+    r += Noise_2D(pos, scale * 2 * 2) * 0.250;
+    r += Noise_2D(pos, scale * 2 * 2 * 2) * 0.125;
+	r += Noise_2D(pos, scale  * 2 * 2 * 2 * 2) * 0.0625;
+    return r / 2;
+}
+
 float CloudNoise_3D(float3 pos, float scale)
 {
     float r = Noise_3D(pos, scale);
