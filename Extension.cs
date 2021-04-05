@@ -183,6 +183,14 @@ namespace TotBase
             return pos;
         }
 
+        public static Vector2Int Min(this Vector2Int v1, Vector2Int v2) {
+            return new Vector2Int(Math.Min(v1.x, v2.x), Math.Min(v1.y, v2.y));
+        }
+
+        public static Vector2Int Max(this Vector2Int v1, Vector2Int v2) {
+            return new Vector2Int(Math.Max(v1.x, v2.x), Math.Max(v1.y, v2.y));
+        }
+
         public static Rect SnapToGrid(this Rect rect, float gridSize)
         {            
             rect.position = rect.position.Snap(gridSize);
