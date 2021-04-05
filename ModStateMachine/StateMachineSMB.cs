@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace TotBase.SM
 {
-    public abstract class StateMachineMB<M, S> : MonoBehaviour where M : StateMachineMB<M, S> where S : StateMB<M, S>
+    public abstract class StateMachineSMB<M, S> : MonoBehaviour where M : StateMachineSMB<M, S> where S : StateSMB<M, S>
     {
         private S lastState;
         private S currentState;
@@ -22,21 +22,6 @@ namespace TotBase.SM
             currentState = state;
             currentState?.EnterState((M)this);
             LastEnterState = Time.time;
-        }
-
-        protected virtual void Update()
-        {
-            currentState?.DoUpdate((M)this);
-        }
-
-        protected virtual void LateUpdate()
-        {
-            currentState?.DoLateUpdate((M)this);
-        }
-
-        protected virtual void FixedUpdate()
-        {
-            currentState?.DoFixedUpdate((M)this);
         }
     }
 }
