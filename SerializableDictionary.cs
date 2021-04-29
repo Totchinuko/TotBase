@@ -19,6 +19,7 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IS
     public void OnAfterDeserialize()
     {
         Clear();
+        if(_keys == null || _values == null) return;
 
         for (int i = 0; i < _keys.Length; i++)
         {
