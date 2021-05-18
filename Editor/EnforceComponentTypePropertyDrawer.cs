@@ -17,7 +17,7 @@ namespace TotBase
             GameObject obj = default;
             if(comp != null)
                 obj = comp.gameObject;
-            obj = EditorGUI.ObjectField(position, new GUIContent($"Component ({propAttribute.type.Name})"), obj, typeof(GameObject), true) as GameObject;
+            obj = EditorGUI.ObjectField(position, new GUIContent($"{property.name} ({propAttribute.type.Name})"), obj, typeof(GameObject), true) as GameObject;
             if(obj == null)
                 property.objectReferenceValue = null;
             else {
