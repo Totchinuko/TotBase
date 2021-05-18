@@ -40,6 +40,36 @@ namespace TotBase
             return new SerializableGuid(o);
         }
 
+        public override bool Equals(object obj)
+        {
+            if(obj.GetType() != typeof(SerializableGuid) && obj.GetType() != typeof(Guid))
+                throw new Exception("Can only be compared to a SeriliazedGuid");
+            if(obj is Guid)
+                return guid.Equals((Guid)obj);
+            return guid.Equals(((SerializableGuid)obj).guid);
+        }
+
+        public static bool operator ==(Guid obj, SerializableGuid guid) {
+            return obj == guid.guid;
+        }
+
+        public static bool operator !=(Guid obj, SerializableGuid guid) {
+            return obj != guid.guid;
+        }
+        
+        public static bool operator ==(SerializableGuid obj, SerializableGuid guid) {
+            return obj.guid == guid.guid;
+        }
+
+        public static bool operator !=(SerializableGuid obj, SerializableGuid guid) {
+            return obj.guid != guid.guid;
+        }
+        
+        public override int GetHashCode()
+        {
+            return guid.GetHashCode();
+        }
+
         public void OnBeforeSerialize()
         {
             suid = guid.ToString();
