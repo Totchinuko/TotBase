@@ -47,6 +47,11 @@ namespace TotBase
 
         private void Trigger()
         {
+            Timing.RunCoroutine(DelayedTrigger());
+        }
+
+        private IEnumerator<float> DelayedTrigger() {
+            yield return Timing.WaitForOneFrame;
             OnSceneLoaded?.Invoke();
             Destroy(gameObject);
         }
