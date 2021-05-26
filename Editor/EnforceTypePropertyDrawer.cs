@@ -13,7 +13,7 @@ namespace TotBase
         {
             EnforceTypeAttribute propAttribute = attribute as EnforceTypeAttribute;
             EditorGUI.BeginProperty(position, label, property);
-            UnityEngine.Object obj = EditorGUI.ObjectField(position, property.objectReferenceValue, propAttribute.type, true);
+            UnityEngine.Object obj = EditorGUI.ObjectField(position, property.objectReferenceValue, propAttribute.type, false);
             if (obj != null && propAttribute.type.IsAssignableFrom(obj.GetType()) && !EditorGUI.showMixedValue)
             {
                 property.objectReferenceValue = obj;
