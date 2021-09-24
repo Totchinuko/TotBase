@@ -411,5 +411,12 @@ void Dissolve_3D(float dissolve, float3 position, float3 objPosition, float nois
     alpha = p;
 }
 
+float DistLine(float2 p, float2 a, float2 b) {
+	float2 pa = p-a;
+	float2 ba = b-a;
+	float2 t = saturate(dot(pa, ba)/dot(ba, ba));
+	return length(pa - ba*t);
+}
+
 #endif
 END_CODE
