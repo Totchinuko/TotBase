@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.Reflection;
+using Object = UnityEngine.Object;
 
 namespace TotBaseEditor
 {
@@ -24,6 +25,30 @@ namespace TotBaseEditor
             EditorApplication.CallbackFunction value = (EditorApplication.CallbackFunction)info.GetValue(null);
             value -= callback;
             info.SetValue(null, value);
+        }
+
+        [MenuItem("Assets/Create/Json")]
+        public static void CreateJsonFile() {
+            string directoryPath = "Assets";
+            foreach (Object obj in Selection.GetFiltered(typeof(Object), SelectionMode.Assets))
+            {
+                directoryPath = AssetDatabase.GetAssetPath(obj);
+                if (!string.IsNullOrEmpty(directoryPath) && File.Exists(directoryPath))
+                {
+                directoryPath = Path.GetDirectoryName(directoryPath);
+                break;
+                }
+            }
+            directoryPath = directoryPath.Replace("\\", "/");
+            if (directoryPath.Length > 0 && directoryPath[directoryPath.Length - 1] != '/')
+                directoryPath += "/";
+            if (string.IsNullOrEmpty(directoryPath))
+                directoryPath = "Assets/";
+
+            var fileName = "New Json.json";
+            directoryPath = AssetDatabase.GenerateUniqueAssetPath(directoryPath + fileName);
+            File.WriteAllText(directoryPath, "");
+            AssetDatabase.Refresh();
         }
 
         /// <summary>
