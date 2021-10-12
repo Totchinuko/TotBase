@@ -230,6 +230,14 @@ namespace TotBase
             return true;
         }
 
+        static public void WaitNextFrame(Action callback, Segment segment = Segment.Update) {
+            Timing.RunCoroutine(WaitNextFrameInternal(callback));
+        }
+
+        static private IEnumerator<float> WaitNextFrameInternal(Action callback) {
+            yield return Timing.WaitForOneFrame;
+            callback?.Invoke();
+        }
 
     }
 }
