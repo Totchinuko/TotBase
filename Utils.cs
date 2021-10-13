@@ -239,5 +239,17 @@ namespace TotBase
             callback?.Invoke();
         }
 
+        static public Vector3 GetStart(this CapsuleCollider capsule) {
+            return capsule.transform.TransformPoint(capsule.center + Vector3.up * capsule.height / 2);
+        }
+
+        static public Vector3 GetEnd(this CapsuleCollider capsule) {
+            return capsule.transform.TransformPoint(capsule.center - Vector3.up * capsule.height / 2);
+        }
+
+        static public Vector3 GetCenter(this CapsuleCollider capsule) {
+            return capsule.transform.TransformPoint(capsule.center);
+        }
+
     }
 }
