@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.IO;
+using System.ComponentModel;
 
 namespace TotBase
 {
@@ -249,6 +250,55 @@ namespace TotBase
 
         static public Vector3 GetCenter(this CapsuleCollider capsule) {
             return capsule.transform.TransformPoint(capsule.center);
+        }
+
+        public static object GetDefault(Type type)
+        {
+            if(type.IsValueType)
+                return Activator.CreateInstance(type);
+            return null;
+        }
+
+        public static object GetDefault(object component, string path) {
+            return GetDefault(GetTypeAtPath(component, path));
+        }
+
+        public static object GetValueAtPath(object component, string path) {
+            foreach(string segment in path.Split('.')) {
+                if (component == null) return null;
+                component = GetValue(component, segment);
+            }
+            return component;
+        }
+
+        public static void SetValueAtPath(object component, string path, object value) {
+            string[] segments = path.Split('.');
+            for(int i = 0; i < segments.Length; i++) {
+                if(component == null) return;
+                if(i == segments.Length-1)
+                    SetValue(component, segments[i], value);
+                else
+                    component = GetValue(component, segments[i]);
+            }
+        }
+
+        public static Type GetTypeAtPath(object component, string path) {
+            PropertyDescriptor property = null;
+            foreach(string segment in path.Split('.')) {
+                if (component == null) return null;
+                property = TypeDescriptor.GetProperties(component)?[segment];
+                component = property?.GetValue(component);
+            }
+            return property?.PropertyType;
+        }
+
+        public static object GetValue(object component, string propertyName)
+        {
+            return TypeDescriptor.GetProperties(component)?[propertyName]?.GetValue(component);
+        }
+
+        public static void SetValue(object component, string propertyName, object value) {
+            TypeDescriptor.GetProperties(component)?[propertyName]?.SetValue(component, value);
         }
 
     }
