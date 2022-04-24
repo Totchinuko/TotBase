@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
-using System.IO;
 using UnityEngine.UI;
 
 namespace TotBase
@@ -69,7 +65,7 @@ namespace TotBase
                     return child;
                 }
                 result = FirstChildOrDefault(child, query);
-                if(result != null)
+                if (result != null)
                     break;
             }
 
@@ -80,7 +76,7 @@ namespace TotBase
         {
             Canvas.ForceUpdateCanvases();
             Vector2 viewportLocalPosition = instance.viewport.localPosition;
-            Vector2 childLocalPosition   = child.localPosition;
+            Vector2 childLocalPosition = child.localPosition;
             Vector2 result = new Vector2(
                 0 - (viewportLocalPosition.x + childLocalPosition.x),
                 0 - (viewportLocalPosition.y + childLocalPosition.y)
@@ -166,6 +162,7 @@ namespace TotBase
                 return Quaternion.Slerp(reference, q, angle / currentAngle);
             return q;
         }
+
         public static bool Contains<T>(this T[] t_arr, T t) where T : class
         {
             for (int i = 0; i < t_arr.Length; i++)
@@ -196,16 +193,18 @@ namespace TotBase
             return pos;
         }
 
-        public static Vector2Int Min(this Vector2Int v1, Vector2Int v2) {
+        public static Vector2Int Min(this Vector2Int v1, Vector2Int v2)
+        {
             return new Vector2Int(Math.Min(v1.x, v2.x), Math.Min(v1.y, v2.y));
         }
 
-        public static Vector2Int Max(this Vector2Int v1, Vector2Int v2) {
+        public static Vector2Int Max(this Vector2Int v1, Vector2Int v2)
+        {
             return new Vector2Int(Math.Max(v1.x, v2.x), Math.Max(v1.y, v2.y));
         }
 
         public static Rect SnapToGrid(this Rect rect, float gridSize)
-        {            
+        {
             rect.position = rect.position.Snap(gridSize);
             return rect;
         }
@@ -216,14 +215,12 @@ namespace TotBase
             return rect;
         }
 
-
         public static Rect Extends(this Rect rect, float amount)
         {
             rect.position -= new Vector2(amount, amount);
             rect.size += new Vector2(amount * 2, amount * 2);
             return rect;
         }
-
 
         public static void DrawTexture(this Texture2D tex, Rect rect, Color col)
         {
@@ -283,6 +280,11 @@ namespace TotBase
 
             bounds.SetMinMax(min, max);
             return bounds;
+        }
+
+        public static float NextFloat(this System.Random random)
+        {
+            return (float)random.NextDouble();
         }
     }
 }
