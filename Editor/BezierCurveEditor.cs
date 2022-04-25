@@ -31,7 +31,7 @@ namespace TotBase
             for (int i = 0; i < curve.PointCount; i++)
                 DrawBezierPoint(i);
 
-            DrawBezier(curve, Color.white);
+            //DrawBezier(curve, Color.white);
         }
 
         public override void OnInspectorGUI()
@@ -57,11 +57,20 @@ namespace TotBase
             GUILayout.Space(15);
 
             EditorGUI.BeginChangeCheck();
-            int stepPerCurve = EditorGUILayout.IntField("Steps per curve", curve.stepPerCuve);
+            int stepPerCurve = EditorGUILayout.IntField("Steps per curve", curve.StepPerCurve);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(curve, "Change Step per Curve");
-                curve.stepPerCuve = stepPerCurve;
+                curve.StepPerCurve = stepPerCurve;
+                EditorUtility.SetDirty(curve);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            Color bColor = EditorGUILayout.ColorField("Curve Color", curve.bezierColor);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(curve, "Change Bezier color");
+                curve.bezierColor = bColor;
                 EditorUtility.SetDirty(curve);
             }
 
@@ -146,22 +155,22 @@ namespace TotBase
             Handles.DrawLine(tr.TransformPoint(bezier.Post), tr.TransformPoint(bezier.Point));
         }
 
-        public void DrawBezier(BezierCurve bezier, Color color)
-        {
-            Color c = Handles.color;
-            Handles.color = color;
+        //public void DrawBezier(BezierCurve bezier, Color color)
+        //{
+        //    Color c = Handles.color;
+        //    Handles.color = color;
 
-            Vector3 start = bezier.GetPoint(0f);
-            int steps = bezier.stepPerCuve * bezier.CurveCount;
-            for (int i = 1; i <= steps; i++)
-            {
-                Vector3 end = bezier.GetPoint(i / (float)steps);
-                Handles.DrawLine(start, end);
-                start = end;
-            }
+        //    Vector3 start = bezier.GetPoint(0f);
+        //    int steps = bezier.stepPerCuve * bezier.CurveCount;
+        //    for (int i = 1; i <= steps; i++)
+        //    {
+        //        Vector3 end = bezier.GetPoint(i / (float)steps);
+        //        Handles.DrawLine(start, end);
+        //        start = end;
+        //    }
 
-            Handles.color = c;
-        }
+        //    Handles.color = c;
+        //}
 
         public void DrawSelectectPointInspector()
         {
@@ -171,12 +180,14 @@ namespace TotBase
             Vector3 previous = EditorGUILayout.Vector3Field("Previous", bezierPoint.Previous);
             Vector3 point = EditorGUILayout.Vector3Field("Point", bezierPoint.Point);
             Vector3 post = EditorGUILayout.Vector3Field("Post", bezierPoint.Post);
+            float weight = EditorGUILayout.FloatField("Weight", bezierPoint.Weight);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(curve, "Move Point");
                 bezierPoint.Previous = previous;
                 bezierPoint.Point = point;
                 bezierPoint.Post = post;
+                bezierPoint.Weight = weight;
                 EditorUtility.SetDirty(curve);
             }
         }

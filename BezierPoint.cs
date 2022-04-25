@@ -17,7 +17,12 @@ namespace TotBase
         private float3 post;
 
         [SerializeField]
+        private float weight = 1f;
+
+        [SerializeField]
         private BezierControlPointMode mode;
+
+        public event Action<BezierPoint> PointChanged;
 
         public float3 Point
         {
@@ -28,6 +33,7 @@ namespace TotBase
                 previous += delta;
                 post += delta;
                 point = value;
+                PointChanged?.Invoke(this);
             }
         }
 
@@ -38,6 +44,17 @@ namespace TotBase
             {
                 previous = value;
                 post = EnforceMode(post, previous);
+                PointChanged?.Invoke(this);
+            }
+        }
+
+        public float Weight
+        {
+            get => weight;
+            set
+            {
+                weight = value;
+                PointChanged?.Invoke(this);
             }
         }
 
@@ -48,6 +65,7 @@ namespace TotBase
             {
                 post = value;
                 previous = EnforceMode(previous, post);
+                PointChanged?.Invoke(this);
             }
         }
 
@@ -58,6 +76,7 @@ namespace TotBase
             {
                 mode = value;
                 post = EnforceMode(post, previous);
+                PointChanged?.Invoke(this);
             }
         }
 
