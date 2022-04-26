@@ -171,6 +171,16 @@ float3 N33(float3 p)
 }
 #endif
 
+float3 InterpolateBicubicPoint(float3 p0, float3 p1, float3 p2, float3 p3, float t)
+{
+    t = clamp(t, 0, 1);
+    float oneMinusT = 1 - t;
+    return oneMinusT * oneMinusT * oneMinusT * p0 +
+        3 * oneMinusT * oneMinusT * t * p1 +
+        3 * oneMinusT * t * t * p2 +
+        t * t * t * p3;
+}
+
 float map(float value, float min1, float max1, float min2, float max2) 
 {
 	return ( (value - min1) / (max1 - min1) ) * (max2 - min2) + min2;
