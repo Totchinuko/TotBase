@@ -1,10 +1,12 @@
-using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.IO;
-using System.ComponentModel;
+using Unity.Collections;
+using Unity.Mathematics;
+using UnityEngine;
 
 namespace TotBase
 {
@@ -12,10 +14,9 @@ namespace TotBase
     {
         public static Vector2 MousePosToScreenUV(Vector2 mousePosition, bool normalized = true)
         {
-
             mousePosition.x /= Screen.width;
             mousePosition.y /= Screen.height;
-            if(normalized)
+            if (normalized)
             {
                 float ratio = Screen.width / Screen.height;
                 if (ratio < 1f)
@@ -26,7 +27,6 @@ namespace TotBase
             return mousePosition;
         }
 
-                
         /// <summary>
         /// Use 4 raycast for smooth normal calculation
         /// </summary>
@@ -34,9 +34,9 @@ namespace TotBase
         /// <returns></returns>
         public static void GetFourPointGroundData(Vector3 origin, Vector3 forward, float radius, float distance, float maxGroundAngle, LayerMask mask, ref GroundData data, bool debug = false)
         {
-            // testing if we are on the ground first            
+            // testing if we are on the ground first
             RaycastHit hit;
-            if(!Physics.SphereCast(origin, radius, -Vector3.up, out hit, distance, mask, QueryTriggerInteraction.Ignore))
+            if (!Physics.SphereCast(origin, radius, -Vector3.up, out hit, distance, mask, QueryTriggerInteraction.Ignore))
             {
                 data.onGround = false;
                 data.position = hit.point;
@@ -45,7 +45,7 @@ namespace TotBase
 
             Vector3 right = Vector3.Cross(Vector3.up, forward);
             float addedDistance = GetCheckDistance(radius, maxGroundAngle);
-            
+
             Ray rayA = new Ray(origin + (forward + right).normalized * radius, Vector3.down);
             Ray rayB = new Ray(origin + (forward + -right).normalized * radius, Vector3.down);
             Ray rayC = new Ray(origin + (-forward + right).normalized * radius, Vector3.down);
@@ -57,7 +57,7 @@ namespace TotBase
             bool hittingD = Physics.SphereCast(rayD, 0.02f, out RaycastHit hitD, distance + addedDistance, mask, QueryTriggerInteraction.Ignore);
 
             // more complexe ground checking
-            if((!hittingA && !hittingD) || (!hittingC && !hittingB))
+            if ((!hittingA && !hittingD) || (!hittingC && !hittingB))
             {
                 data.onGround = false;
                 data.position = hit.point;
@@ -74,14 +74,14 @@ namespace TotBase
             data.normal = Vector3.Cross(pointA - pointD, pointC - pointB).normalized;
             data.angle = Mathf.Round(Vector3.Angle(data.normal, Vector3.up));
 
-            if(debug)
+            if (debug)
             {
                 DebugDraw.DrawMarker(pointA, .1f, hittingA ? Color.yellow : Color.red, 0f, false);
                 DebugDraw.DrawMarker(pointB, .1f, hittingB ? Color.yellow : Color.red, 0f, false);
                 DebugDraw.DrawMarker(pointC, .1f, hittingC ? Color.yellow : Color.red, 0f, false);
                 DebugDraw.DrawMarker(pointD, .1f, hittingD ? Color.yellow : Color.red, 0f, false);
             }
-        }  
+        }
 
         /// <summary>
         /// Get the ground distance check depending on radius check and max angle actor can stand on
@@ -103,22 +103,22 @@ namespace TotBase
             return new Vector3(rand.x, center.y, rand.y);
         }
 
-        public static Vector3 GetRandomDirectionPlane(Vector3 direction, Vector3 normal, float maxAngle) {
-                return Quaternion.AngleAxis(UnityEngine.Random.Range(-(maxAngle / 2), maxAngle / 2), normal) * direction;
+        public static Vector3 GetRandomDirectionPlane(Vector3 direction, Vector3 normal, float maxAngle)
+        {
+            return Quaternion.AngleAxis(UnityEngine.Random.Range(-(maxAngle / 2), maxAngle / 2), normal) * direction;
         }
 
         public static Vector3 GetRandomDirection(Vector3 direction, float maxAngle)
         {
             Vector3 randDirection = UnityEngine.Random.insideUnitSphere;
             float angle = Vector3.Angle(direction, randDirection);
-            if(angle > maxAngle)
+            if (angle > maxAngle)
             {
                 float lerp = UnityEngine.Random.Range(0f, maxAngle / angle);
                 return Vector3.Lerp(direction, randDirection, lerp);
             }
-                
-            return randDirection;
 
+            return randDirection;
         }
 
         public static IEnumerable<T> GetObjectWithInterface<T>() where T : class
@@ -157,7 +157,6 @@ namespace TotBase
             return false;
         }
 
-        
         /// <summary>
         /// Use reflexion to find matching method given the current state and main method name. Build a cache for futur lookup. Use default if none found.
         /// </summary>
@@ -187,6 +186,7 @@ namespace TotBase
             }
             return returnValue as T;
         }
+
         public static string GetDocumentPathOrCreate()
         {
             string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -196,6 +196,7 @@ namespace TotBase
         }
 
         public static bool TryGetFile(out string absolutePath, params string[] relativePath) => TryGetFile(out absolutePath, Path.Combine(relativePath));
+
         public static bool TryGetFile(out string absolutePath, string relativePath)
         {
             absolutePath = Path.Combine(GetDocumentPathOrCreate(), relativePath);
@@ -205,10 +206,11 @@ namespace TotBase
         }
 
         public static bool TryGetFileContent(out string content, params string[] relativePath) => TryGetFileContent(out content, Path.Combine(relativePath));
+
         public static bool TryGetFileContent(out string content, string relativePath)
         {
             content = "";
-            if(TryGetFile(out string path, relativePath))
+            if (TryGetFile(out string path, relativePath))
             {
                 content = File.ReadAllText(path);
                 return true;
@@ -217,6 +219,7 @@ namespace TotBase
         }
 
         public static bool TrySetFileContent(string content, params string[] relativePath) => TrySetFileContent(content, Path.Combine(relativePath));
+
         public static bool TrySetFileContent(string content, string relativePath)
         {
             try
@@ -231,60 +234,72 @@ namespace TotBase
             return true;
         }
 
-        static public void WaitNextFrame(Action callback, Segment segment = Segment.Update) {
+        public static void WaitNextFrame(Action callback, Segment segment = Segment.Update)
+        {
             Timing.RunCoroutine(WaitNextFrameInternal(callback));
         }
 
-        static private IEnumerator<float> WaitNextFrameInternal(Action callback) {
+        private static IEnumerator<float> WaitNextFrameInternal(Action callback)
+        {
             yield return Timing.WaitForOneFrame;
             callback?.Invoke();
         }
 
-        static public Vector3 GetStart(this CapsuleCollider capsule) {
+        public static Vector3 GetStart(this CapsuleCollider capsule)
+        {
             return capsule.transform.TransformPoint(capsule.center + Vector3.up * capsule.height / 2);
         }
 
-        static public Vector3 GetEnd(this CapsuleCollider capsule) {
+        public static Vector3 GetEnd(this CapsuleCollider capsule)
+        {
             return capsule.transform.TransformPoint(capsule.center - Vector3.up * capsule.height / 2);
         }
 
-        static public Vector3 GetCenter(this CapsuleCollider capsule) {
+        public static Vector3 GetCenter(this CapsuleCollider capsule)
+        {
             return capsule.transform.TransformPoint(capsule.center);
         }
 
         public static object GetDefault(Type type)
         {
-            if(type.IsValueType)
+            if (type.IsValueType)
                 return Activator.CreateInstance(type);
             return null;
         }
 
-        public static object GetDefault(object component, string path) {
+        public static object GetDefault(object component, string path)
+        {
             return GetDefault(GetTypeAtPath(component, path));
         }
 
-        public static object GetValueAtPath(object component, string path) {
-            foreach(string segment in path.Split('.')) {
+        public static object GetValueAtPath(object component, string path)
+        {
+            foreach (string segment in path.Split('.'))
+            {
                 if (component == null) return null;
                 component = GetValue(component, segment);
             }
             return component;
         }
 
-        public static void SetValueAtPath(object component, string path, object value) {
+        public static void SetValueAtPath(object component, string path, object value)
+        {
             string[] segments = path.Split('.');
-            for(int i = 0; i < segments.Length; i++) {
-                if(component == null) return;
-                if(i == segments.Length-1)
+            for (int i = 0; i < segments.Length; i++)
+            {
+                if (component == null) return;
+                if (i == segments.Length - 1)
                     SetValue(component, segments[i], value);
                 else
                     component = GetValue(component, segments[i]);
             }
         }
 
-        public static Type GetTypeAtPath(object component, string path) {
+        public static Type GetTypeAtPath(object component, string path)
+        {
             PropertyDescriptor property = null;
-            foreach(string segment in path.Split('.')) {
+            foreach (string segment in path.Split('.'))
+            {
                 if (component == null) return null;
                 property = TypeDescriptor.GetProperties(component)?[segment];
                 component = property?.GetValue(component);
@@ -297,9 +312,25 @@ namespace TotBase
             return TypeDescriptor.GetProperties(component)?[propertyName]?.GetValue(component);
         }
 
-        public static void SetValue(object component, string propertyName, object value) {
+        public static void SetValue(object component, string propertyName, object value)
+        {
             TypeDescriptor.GetProperties(component)?[propertyName]?.SetValue(component, value);
         }
 
+        public static bool TestPlanesAABB(NativeArray<Plane> planes, Bounds bounds)
+        {
+            for (int i = 0; i < planes.Length; i++)
+            {
+                Plane plane = planes[i];
+                float3 normal_sign = math.sign(plane.normal);
+                float3 test_point = (float3)(bounds.center) + (bounds.extents * normal_sign);
+
+                float dot = math.dot(test_point, plane.normal);
+                if (dot + plane.distance < 0)
+                    return false;
+            }
+
+            return true;
+        }
     }
 }
