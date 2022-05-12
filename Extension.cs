@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -286,5 +287,7 @@ namespace TotBase
         {
             return (float)random.NextDouble();
         }
+
+        public static float4 ToFloat(this Color color) => math.float4(color.r, color.g, color.b, color.a);
     }
 }
